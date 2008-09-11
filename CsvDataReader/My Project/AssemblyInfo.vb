@@ -1,6 +1,7 @@
 ﻿Imports System
 Imports System.Reflection
 Imports System.Runtime.InteropServices
+Imports log4net
 
 ' General Information about an assembly is controlled through the following 
 ' set of attributes. Change these attribute values to modify the information
@@ -14,6 +15,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyProduct("")> 
 <Assembly: AssemblyCopyright("")> 
 <Assembly: AssemblyTrademark("")> 
+<Assembly: log4net.Config.XmlConfigurator(Watch:=True)> 
 
 <Assembly: ComVisible(False)>
 
