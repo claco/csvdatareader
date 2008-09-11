@@ -3,7 +3,6 @@ Imports System.Text
 Imports System.IO
 Imports System.Collections.ObjectModel
 
-Namespace SRE.Data
     Public Class CsvDataReader
         Inherits StreamReader
         Implements IDataReader
@@ -264,5 +263,3 @@ Namespace SRE.Data
 #End Region
 
     End Class
-
-End Namespace
