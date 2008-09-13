@@ -16,6 +16,7 @@ Public Class CsvDataReader
     Private _disposed As Boolean = False
     Private _dataTable As New DataTable
     Private _dataRow As DataRow
+    Private _isClosed As Boolean = True
 
 #End Region
 
@@ -33,6 +34,7 @@ Public Class CsvDataReader
         MyBase.New(path)
 
         For Each column As DataColumn In columns
+            column.AllowDBNull = True
             Me.DataTable.Columns.Add(column)
         Next
     End Sub
@@ -75,9 +77,11 @@ Public Class CsvDataReader
 
         Dim columns As New Collection(Of DataColumn)
         For Each field As String In fields
-            Debug.WriteLine("HeaderColumnName: " & field.Trim)
+            Log.DebugFormat("Adding column {0}", field.Trim)
 
-            columns.Add(New DataColumn(field.Trim, GetType(String)))
+            Dim column As New DataColumn(field.Trim, GetType(String))
+            column.AllowDBNull = True
+            columns.Add(column)
         Next
 
         Return columns
@@ -103,7 +107,7 @@ Public Class CsvDataReader
 
     Public ReadOnly Property IsClosed() As Boolean Implements System.Data.IDataReader.IsClosed
         Get
-            Return False
+            Return _isClosed
         End Get
     End Property
 
@@ -113,23 +117,40 @@ Public Class CsvDataReader
 
     Public Overloads Function Read() As Boolean Implements System.Data.IDataReader.Read
         If Me.Peek >= 0 Then
-            Dim fields() As Object = Me.ReadLine.Split(DEFAULT_FIELD_SEPARATOR)
+            _isClosed = False
+
+            Dim line As String = Me.ReadLine.Trim
+
+            If String.IsNullOrEmpty(line) Then
+                If Me.Peek < 0 Then
+                    _isClosed = True
+                End If
+
+                Return False
+            End If
+
+            Dim fields() As Object = line.Split(DEFAULT_FIELD_SEPARATOR)
 
             REM Turn empty strings into Nothing, which Row turns to DbNull if the Column allows it
             REM Row.Add will throw an exception if the column does not allow nulls
             For f = 0 To fields.Length - 1
-                If String.IsNullOrEmpty(fields(f)) Then
+                Dim value As String = fields(f).Trim
+
+                If String.IsNullOrEmpty(value) Then
                     fields(f) = Nothing
+                Else
+                    fields(f) = value
                 End If
             Next
 
             Me.DataTable.Rows.Add(fields)
 
-
             _dataRow = Me.DataTable.Rows(Me.DataTable.Rows.Count - 1)
 
             Return True
         Else
+            _isClosed = True
+
             Return False
         End If
     End Function
@@ -187,7 +208,7 @@ Public Class CsvDataReader
     End Function
 
     Public Function GetFieldType(ByVal i As Integer) As System.Type Implements System.Data.IDataRecord.GetFieldType
-        Return Me.CurrentDataRow.Item(i).GetType
+        Return Me.GetValue(i).GetType
     End Function
 
     Public Function GetFloat(ByVal i As Integer) As Single Implements System.Data.IDataRecord.GetFloat
@@ -195,7 +216,11 @@ Public Class CsvDataReader
     End Function
 
     Public Function GetGuid(ByVal i As Integer) As System.Guid Implements System.Data.IDataRecord.GetGuid
-        Return Me.GetValue(i)
+        If Me.GetFieldType(i) Is GetType(String) Then
+            Return New Guid(Me.GetString(i))
+        Else
+            Return Me.GetValue(i)
+        End If
     End Function
 
     Public Function GetInt16(ByVal i As Integer) As Short Implements System.Data.IDataRecord.GetInt16
@@ -227,7 +252,11 @@ Public Class CsvDataReader
     End Function
 
     Public Function GetValues(ByVal values() As Object) As Integer Implements System.Data.IDataRecord.GetValues
-        Me.CurrentDataRow.ItemArray.CopyTo(values, 0)
+        Dim count As Integer = IIf(values.Length < Me.FieldCount, values.Length, Me.FieldCount)
+
+        Array.Copy(Me.CurrentDataRow.ItemArray, values, count)
+
+        Return count
     End Function
 
     Public Function IsDBNull(ByVal i As Integer) As Boolean Implements System.Data.IDataRecord.IsDBNull
