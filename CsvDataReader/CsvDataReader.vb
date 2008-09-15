@@ -180,11 +180,25 @@ Public Class CsvDataReader
     End Function
 
     Public Function GetChar(ByVal i As Integer) As Char Implements System.Data.IDataRecord.GetChar
-        Return Me.GetString(i)
+        Dim value As String = Me.GetString(i)
+
+        If value.Length >= 1 Then
+            Return Convert.ToChar(value.Substring(0, 1))
+        Else
+            Return Char.MinValue
+        End If
     End Function
 
     Public Function GetChars(ByVal i As Integer, ByVal fieldoffset As Long, ByVal buffer() As Char, ByVal bufferoffset As Integer, ByVal length As Integer) As Long Implements System.Data.IDataRecord.GetChars
-        Throw New NotImplementedException
+        Dim value As String = Me.GetString(i)
+
+        If buffer Is Nothing Then
+            Return value.Length
+        End If
+
+        Array.Copy(value.ToCharArray(bufferoffset, length), buffer, buffer.Length)
+
+        Return buffer.Length
     End Function
 
     Public Function GetData(ByVal i As Integer) As System.Data.IDataReader Implements System.Data.IDataRecord.GetData

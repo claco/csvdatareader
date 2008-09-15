@@ -65,6 +65,27 @@ Public Class CsvDataReaderTests
             Assert.AreEqual(values(0), reader.GetValue(0), "GetValues item sames as GetValue")
             Assert.AreEqual(values(0), reader.Item(0), "GetValues item sames as Item")
             Assert.AreEqual(values(0), reader.Item(reader.GetName(0)), "GetValues item sames as Item")
+            Assert.AreEqual("C", reader.GetChar(0).ToString, "GetChar returns first character")
+
+
+            Assert.AreEqual(11, reader.GetChars(0, Nothing, Nothing, Nothing, Nothing), "GetChars returns length when no buffer is passed")
+
+            Dim chars(reader.GetString(0).Length - 1) As Char
+            Assert.AreEqual(11, reader.GetChars(0, 0, chars, 0, 11), "Read characters from column")
+            Assert.AreEqual(11, chars.Length, "Read correct number of character")
+            Assert.AreEqual("C", chars(0).ToString)
+            Assert.AreEqual("h", chars(1).ToString)
+            Assert.AreEqual("r", chars(2).ToString)
+            Assert.AreEqual("i", chars(3).ToString)
+            Assert.AreEqual("s", chars(4).ToString)
+            Assert.AreEqual("t", chars(5).ToString)
+            Assert.AreEqual("o", chars(6).ToString)
+            Assert.AreEqual("p", chars(7).ToString)
+            Assert.AreEqual("h", chars(8).ToString)
+            Assert.AreEqual("e", chars(9).ToString)
+            Assert.AreEqual("r", chars(10).ToString)
+
+
 
             Assert.AreEqual("35", reader.GetString(1), "Second column value is correct")
             Assert.AreEqual(Convert.ToInt16(35), reader.GetInt16(1), "Second column value is correct as Int16")
@@ -78,6 +99,7 @@ Public Class CsvDataReaderTests
             Assert.AreEqual(values(1), reader.GetValue(1), "GetValues item sames as GetValue")
             Assert.AreEqual(values(1), reader.Item(1), "GetValues item sames as Item")
             Assert.AreEqual(values(1), reader.Item(reader.GetName(1)), "GetValues item sames as Item")
+            Assert.AreEqual("3", reader.GetChar(1).ToString, "GetChar returns first character")
 
             Assert.AreEqual("1/2/2003 2:34:56", reader.GetString(2), "Third column value is correct")
             Assert.AreEqual(DateTime.Parse("1/2/2003 2:34:56"), reader.GetDateTime(2), "Third column value is correct as DateTime")
@@ -86,6 +108,7 @@ Public Class CsvDataReaderTests
             Assert.AreEqual(values(2), reader.GetValue(2), "GetValues item sames as GetValue")
             Assert.AreEqual(values(2), reader.Item(2), "GetValues item sames as Item")
             Assert.AreEqual(values(2), reader.Item(reader.GetName(2)), "GetValues item sames as Item")
+            Assert.AreEqual("1", reader.GetChar(2).ToString, "GetChar returns first character")
 
             Assert.AreEqual("1.23", reader.GetString(3), "Fourth column value is correct")
             Assert.AreEqual(Convert.ToSingle(1.23), reader.GetFloat(3), "Fourth column value is correct as Float/Single")
@@ -96,6 +119,7 @@ Public Class CsvDataReaderTests
             Assert.AreEqual(values(3), reader.GetValue(3), "GetValues item sames as GetValue")
             Assert.AreEqual(values(3), reader.Item(3), "GetValues item sames as Item")
             Assert.AreEqual(values(3), reader.Item(reader.GetName(3)), "GetValues item sames as Item")
+            Assert.AreEqual("1", reader.GetChar(3).ToString, "GetChar returns first character")
 
             Assert.AreEqual("11111111-2222-3333-4444-555555555555", reader.GetString(4), "Fifth column value is correct")
             Assert.AreEqual(New Guid("11111111-2222-3333-4444-555555555555"), reader.GetGuid(4), "Fifth column value is correct as Decimal")
@@ -104,6 +128,7 @@ Public Class CsvDataReaderTests
             Assert.AreEqual(values(4), reader.GetValue(4), "GetValues item sames as GetValue")
             Assert.AreEqual(values(4), reader.Item(4), "GetValues item sames as Item")
             Assert.AreEqual(values(4), reader.Item(reader.GetName(4)), "GetValues item sames as Item")
+            Assert.AreEqual("1", reader.GetChar(4).ToString, "GetChar returns first character")
 
             Assert.AreEqual("True", reader.GetString(5), "Sixth column value is correct")
             Assert.IsTrue(reader.GetBoolean(5), "Sixth column value is correct as Boolean")
@@ -112,6 +137,7 @@ Public Class CsvDataReaderTests
             Assert.AreEqual(values(5), reader.GetValue(5), "GetValues item sames as GetValue")
             Assert.AreEqual(values(5), reader.Item(5), "GetValues item sames as Item")
             Assert.AreEqual(values(5), reader.Item(reader.GetName(5)), "GetValues item sames as Item")
+            Assert.AreEqual("T", reader.GetChar(5).ToString, "GetChar returns first character")
 
 
             Assert.IsTrue(reader.Read, "Read second line")
@@ -124,6 +150,7 @@ Public Class CsvDataReaderTests
             Assert.AreEqual(GetType(System.DBNull), reader.GetFieldType(0), "First column is System.DBNull")
             Assert.IsTrue(reader.IsDBNull(0), "First column is null")
             Assert.AreEqual(values(0), reader.GetValue(0), "GetValues item sames as GetValue")
+            Assert.AreEqual(Char.MinValue, reader.GetChar(0), "GetChar returns Char.MinValue for DbNull")
 
             Assert.AreEqual("23", reader.GetString(1), "Second column value is correct")
             Assert.AreEqual(Convert.ToInt16(23), reader.GetInt16(1), "Second column value is correct as Int16")
