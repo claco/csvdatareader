@@ -28,6 +28,7 @@ Public Class CsvDataReaderTests
         Using reader As IDataReader = New CsvDataReader("data\header.csv")
             Assert.IsInstanceOfType(GetType(CsvDataReader), reader, "Is instance of CsvDataReader")
             Assert.AreEqual(6, reader.FieldCount, "Has correct number of fields")
+            Assert.AreEqual(0, reader.Depth, "Depth is always zero")
 
             Assert.AreEqual("STRING", reader.GetName(0), "Has first column name")
             Assert.AreEqual("String", reader.GetDataTypeName(0), "First column type name is String")
@@ -84,6 +85,25 @@ Public Class CsvDataReaderTests
             Assert.AreEqual("h", chars(8).ToString)
             Assert.AreEqual("e", chars(9).ToString)
             Assert.AreEqual("r", chars(10).ToString)
+
+            Assert.AreEqual(11, reader.GetBytes(0, Nothing, Nothing, Nothing, Nothing), "GetBytes returns length when no buffer is passed")
+            Assert.AreEqual(Convert.ToByte(Convert.ToChar("C")), reader.GetByte(0), "GetByte returns first")
+            Dim bytes(reader.GetString(0).Length - 1) As Byte
+            Assert.AreEqual(11, reader.GetBytes(0, 0, bytes, 0, 11), "Read bytes from column")
+            Assert.AreEqual(11, bytes.Length, "Read correct number of bytes")
+            Assert.AreEqual(67, bytes(0))
+            Assert.AreEqual(104, bytes(1))
+            Assert.AreEqual(114, bytes(2))
+            Assert.AreEqual(105, bytes(3))
+            Assert.AreEqual(115, bytes(4))
+            Assert.AreEqual(116, bytes(5))
+            Assert.AreEqual(111, bytes(6))
+            Assert.AreEqual(112, bytes(7))
+            Assert.AreEqual(104, bytes(8))
+            Assert.AreEqual(101, bytes(9))
+            Assert.AreEqual(114, bytes(10))
+
+
 
 
 
@@ -186,7 +206,16 @@ Public Class CsvDataReaderTests
 
             Assert.IsFalse(reader.IsClosed, "Reader is still open until last read")
             Assert.IsFalse(reader.Read, "End of file")
+            Assert.IsFalse(reader.NextResult, "NextResult always returns false")
+            Assert.AreEqual(-1, reader.RecordsAffected, "RecordsAffected always returns -1")
             Assert.IsTrue(reader.IsClosed, "Reader is closed after final read")
+
+            Try
+                reader.GetData(0)
+                Assert.Fail("No exception thrown for GetData")
+            Catch ex As Exception
+                Assert.IsInstanceOfType(GetType(NotImplementedException), ex, "GetData threw NotImplementedException")
+            End Try
         End Using
     End Sub
 
@@ -314,6 +343,8 @@ Public Class CsvDataReaderTests
             Assert.IsFalse(reader.IsClosed, "Reader is still open until last read")
             Assert.IsFalse(reader.Read, "End of file")
             Assert.IsTrue(reader.IsClosed, "Reader is closed after final read")
+
+            reader.Close()
         End Using
     End Sub
 
