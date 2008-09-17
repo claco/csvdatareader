@@ -67,10 +67,7 @@ Public Class CsvDataReaderTests
             Assert.AreEqual(values(0), reader.Item(0), "GetValues item sames as Item")
             Assert.AreEqual(values(0), reader.Item(reader.GetName(0)), "GetValues item sames as Item")
             Assert.AreEqual("C", reader.GetChar(0).ToString, "GetChar returns first character")
-
-
             Assert.AreEqual(11, reader.GetChars(0, Nothing, Nothing, Nothing, Nothing), "GetChars returns length when no buffer is passed")
-
             Dim chars(reader.GetString(0).Length - 1) As Char
             Assert.AreEqual(11, reader.GetChars(0, 0, chars, 0, 11), "Read characters from column")
             Assert.AreEqual(11, chars.Length, "Read correct number of character")
@@ -270,6 +267,39 @@ Public Class CsvDataReaderTests
             Assert.AreEqual("Christopher", reader.GetString(0), "First column value is correct")
             Assert.AreEqual(GetType(String), reader.GetFieldType(0), "First column is System.String")
             Assert.IsFalse(reader.IsDBNull(0), "First column is not null")
+            Assert.AreEqual("C", reader.GetChar(0).ToString, "GetChar returns first character")
+            Assert.AreEqual(11, reader.GetChars(0, Nothing, Nothing, Nothing, Nothing), "GetChars returns length when no buffer is passed")
+            Dim chars(reader.GetString(0).Length - 1) As Char
+            Assert.AreEqual(11, reader.GetChars(0, 0, chars, 0, 11), "Read characters from column")
+            Assert.AreEqual(11, chars.Length, "Read correct number of character")
+            Assert.AreEqual("C", chars(0).ToString)
+            Assert.AreEqual("h", chars(1).ToString)
+            Assert.AreEqual("r", chars(2).ToString)
+            Assert.AreEqual("i", chars(3).ToString)
+            Assert.AreEqual("s", chars(4).ToString)
+            Assert.AreEqual("t", chars(5).ToString)
+            Assert.AreEqual("o", chars(6).ToString)
+            Assert.AreEqual("p", chars(7).ToString)
+            Assert.AreEqual("h", chars(8).ToString)
+            Assert.AreEqual("e", chars(9).ToString)
+            Assert.AreEqual("r", chars(10).ToString)
+
+            Assert.AreEqual(11, reader.GetBytes(0, Nothing, Nothing, Nothing, Nothing), "GetBytes returns length when no buffer is passed")
+            Assert.AreEqual(Convert.ToByte(Convert.ToChar("C")), reader.GetByte(0), "GetByte returns first")
+            Dim bytes(reader.GetString(0).Length - 1) As Byte
+            Assert.AreEqual(11, reader.GetBytes(0, 0, bytes, 0, 11), "Read bytes from column")
+            Assert.AreEqual(11, bytes.Length, "Read correct number of bytes")
+            Assert.AreEqual(67, bytes(0))
+            Assert.AreEqual(104, bytes(1))
+            Assert.AreEqual(114, bytes(2))
+            Assert.AreEqual(105, bytes(3))
+            Assert.AreEqual(115, bytes(4))
+            Assert.AreEqual(116, bytes(5))
+            Assert.AreEqual(111, bytes(6))
+            Assert.AreEqual(112, bytes(7))
+            Assert.AreEqual(104, bytes(8))
+            Assert.AreEqual(101, bytes(9))
+            Assert.AreEqual(114, bytes(10))
 
             Assert.AreEqual("35", reader.GetString(1), "Second column value is correct")
             Assert.AreEqual(Convert.ToInt16(35), reader.GetInt16(1), "Second column value is correct as Int16")
@@ -354,5 +384,6 @@ Public Class CsvDataReaderTests
         Assert.AreEqual(expected.DataType, actual.DataType, "Column data types are equal")
         Assert.AreEqual(expected.AllowDBNull, actual.AllowDBNull, "Column nulls are equal")
     End Sub
+
 End Class
 

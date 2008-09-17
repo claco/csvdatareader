@@ -3,24 +3,29 @@ Imports System.Text
 Imports System.IO
 Imports System.Collections.ObjectModel
 Imports log4net
+Imports Microsoft.VisualBasic.FileIO
 
 ''' <summary>
 ''' Implements an IDataReader fo Csv data files.
 ''' </summary>
 ''' <remarks><seealso cref="IDataReader">IDataReader</seealso>, <seealso cref="IDataRecord">IDataRecord</seealso></remarks>
 Public Class CsvDataReader
-    Inherits StreamReader
     Implements IDataReader
 
 #Region "Privates"
 
-    Private Const DEFAULT_FIELD_SEPARATOR As String = ","
+    Private Const DEFAULT_COLUMN_SEPARATOR As String = ","
+    Private Const DEFAULT_FIELD_TYPE As FieldType = FieldType.Delimited
+
     Private Shared ReadOnly Log As ILog = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod.DeclaringType)
 
     Private _disposed As Boolean = False
     Private _dataTable As New DataTable
-    Private _dataRow As DataRow
+    Private _dataRow As DataRow = Nothing
+    Private _encoding As Encoding = Encoding.UTF8
     Private _isClosed As Boolean = True
+    Private _parser As TextFieldParser = Nothing
+    Private _path As String = String.Empty
 
 #End Region
 
@@ -32,17 +37,7 @@ Public Class CsvDataReader
     ''' <param name="path">String. The full path to the file to reader.</param>
     ''' <remarks></remarks>
     Public Sub New(ByVal path As String)
-        Me.New(path, Encoding.UTF8)
-    End Sub
-
-    ''' <summary>
-    ''' Creates a new CsvDataReader for the file specified.
-    ''' </summary>
-    ''' <param name="path">String. The full path to the file to reader.</param>
-    ''' <param name="columns">Collection(Of DataColumn). The collection of column definitions for the specified files columns.</param>
-    ''' <remarks></remarks>
-    Public Sub New(ByVal path As String, ByVal columns As Collection(Of DataColumn))
-        Me.New(path, columns, Encoding.UTF8)
+        Me.Path = path
     End Sub
 
     ''' <summary>
@@ -52,9 +47,20 @@ Public Class CsvDataReader
     ''' <param name="encoding">Encoding. The encoding of the specified file.</param>
     ''' <remarks></remarks>
     Public Sub New(ByVal path As String, ByVal encoding As Encoding)
-        MyBase.New(path, encoding)
+        Me.Path = path
+        Me.Encoding = encoding
+    End Sub
 
-        For Each column As DataColumn In Me.GetColumnsFromFirstRow
+    ''' <summary>
+    ''' Creates a new CsvDataReader for the file specified.
+    ''' </summary>
+    ''' <param name="path">String. The full path to the file to reader.</param>
+    ''' <param name="columns">Collection(Of DataColumn). The collection of column definitions for the specified files columns.</param>
+    ''' <remarks></remarks>
+    Public Sub New(ByVal path As String, ByVal columns As Collection(Of DataColumn))
+        Me.Path = path
+
+        For Each column As DataColumn In columns
             Me.DataTable.Columns.Add(column)
         Next
     End Sub
@@ -67,7 +73,8 @@ Public Class CsvDataReader
     ''' <param name="encoding">Encoding. The encoding of the specified file.</param>
     ''' <remarks></remarks>
     Public Sub New(ByVal path As String, ByVal columns As Collection(Of DataColumn), ByVal encoding As Encoding)
-        MyBase.New(path, encoding)
+        Me.Path = path
+        Me.Encoding = encoding
 
         For Each column As DataColumn In columns
             Me.DataTable.Columns.Add(column)
@@ -77,6 +84,59 @@ Public Class CsvDataReader
 #End Region
 
 #Region "Properties"
+
+    ''' <summary>
+    ''' The private TextFieldParser instance.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>TextFieldParser</returns>
+    ''' <remarks></remarks>
+    Private ReadOnly Property Parser() As TextFieldParser
+        Get
+            If _parser Is Nothing Then
+                _parser = New TextFieldParser(Me.Path, Me.Encoding)
+                _parser.SetDelimiters(DEFAULT_COLUMN_SEPARATOR)
+                _parser.TextFieldType = FieldType.Delimited
+                _parser.TrimWhiteSpace = True
+            End If
+
+            Return _parser
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Gets/sets the full path to the file to read.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>String</returns>
+    ''' <remarks></remarks>
+    Public Overridable Property Path() As String
+        Get
+            Return _path
+        End Get
+        Set(ByVal value As String)
+            If Not File.Exists(value) Then
+                Throw New FileNotFoundException
+            Else
+                _path = value.Trim
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets/sets the encoding to use when reading the file.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>Encoding</returns>
+    ''' <remarks>The default is UTF8.</remarks>
+    Public Overridable Property Encoding() As Encoding
+        Get
+            Return _encoding
+        End Get
+        Set(ByVal value As Encoding)
+            _encoding = value
+        End Set
+    End Property
 
     ''' <summary>
     ''' Gets the DataTable for the current file.
@@ -108,8 +168,7 @@ Public Class CsvDataReader
     ''' <returns>Collection(Of DataColumn)</returns>
     ''' <remarks></remarks>
     Protected Overridable Function GetColumnsFromFirstRow() As Collection(Of DataColumn)
-        Dim header As String = Me.ReadLine
-        Dim fields() As String = header.Split(DEFAULT_FIELD_SEPARATOR)
+        Dim fields() As String = Me.Parser.ReadFields
 
         Dim columns As New Collection(Of DataColumn)
         For Each field As String In fields
@@ -131,12 +190,8 @@ Public Class CsvDataReader
     ''' Closes the data reader object.
     ''' </summary>
     ''' <remarks></remarks>
-    Public Overrides Sub Close() Implements System.Data.IDataReader.Close
-        MyBase.Close()
-
-        Dim s As StreamReader = Nothing
-        Dim r As IDataReader = s
-
+    Public Sub Close() Implements System.Data.IDataReader.Close
+        Me.Parser.Close()
     End Sub
 
     ''' <summary>
@@ -186,26 +241,18 @@ Public Class CsvDataReader
     ''' </summary>
     ''' <returns>Boolean</returns>
     ''' <remarks></remarks>
-    Public Overloads Function Read() As Boolean Implements System.Data.IDataReader.Read
-        If Me.Peek >= 0 Then
+    Public Function Read() As Boolean Implements System.Data.IDataReader.Read
+        Me.EnsureColumns()
+
+        If Not Me.Parser.EndOfData Then
             _isClosed = False
 
-            Dim line As String = Me.ReadLine.Trim
-
-            If String.IsNullOrEmpty(line) Then
-                If Me.Peek < 0 Then
-                    _isClosed = True
-                End If
-
-                Return False
-            End If
-
-            Dim fields() As Object = line.Split(DEFAULT_FIELD_SEPARATOR)
+            Dim fields() As String = Me.Parser.ReadFields
 
             REM Turn empty strings into Nothing, which Row turns to DbNull if the Column allows it
             REM Row.Add will throw an exception if the column does not allow nulls
             For f = 0 To fields.Length - 1
-                Dim value As String = fields(f).Trim
+                Dim value As String = fields(f)
 
                 If String.IsNullOrEmpty(value) Then
                     fields(f) = Nothing
@@ -246,6 +293,8 @@ Public Class CsvDataReader
     ''' <remarks></remarks>
     Public ReadOnly Property FieldCount() As Integer Implements System.Data.IDataRecord.FieldCount
         Get
+            Me.EnsureColumns()
+
             Return Me.DataTable.Columns.Count
         End Get
     End Property
@@ -348,6 +397,8 @@ Public Class CsvDataReader
     ''' <returns>String</returns>
     ''' <remarks></remarks>
     Public Function GetDataTypeName(ByVal i As Integer) As String Implements System.Data.IDataRecord.GetDataTypeName
+        Me.EnsureColumns()
+
         Return Me.DataTable.Columns(i).DataType.Name
     End Function
 
@@ -452,6 +503,8 @@ Public Class CsvDataReader
     ''' <returns>String</returns>
     ''' <remarks></remarks>
     Public Function GetName(ByVal i As Integer) As String Implements System.Data.IDataRecord.GetName
+        Me.EnsureColumns()
+
         Return Me.DataTable.Columns(i).ColumnName
     End Function
 
@@ -462,6 +515,8 @@ Public Class CsvDataReader
     ''' <returns>Integer</returns>
     ''' <remarks></remarks>
     Public Function GetOrdinal(ByVal name As String) As Integer Implements System.Data.IDataRecord.GetOrdinal
+        Me.EnsureColumns()
+
         Return Me.DataTable.Columns(name).Ordinal
     End Function
 
@@ -472,7 +527,7 @@ Public Class CsvDataReader
     ''' <returns>String</returns>
     ''' <remarks></remarks>
     Public Function GetString(ByVal i As Integer) As String Implements System.Data.IDataRecord.GetString
-        Return Me.CurrentDataRow.Item(i).ToString
+        Return Me.GetValue(i).ToString
     End Function
 
     ''' <summary>
@@ -535,20 +590,43 @@ Public Class CsvDataReader
         End Get
     End Property
 
+    ''' <summary>
+    ''' Ensures that file is read to determine columns from the header line if columns are not already defined.
+    ''' </summary>
+    ''' <remarks></remarks>
+    Protected Sub EnsureColumns()
+        If Me.DataTable.Columns.Count = 0 Then
+            For Each column As DataColumn In Me.GetColumnsFromFirstRow
+                Me.DataTable.Columns.Add(column)
+            Next
+        End If
+    End Sub
+
 #End Region
 
 #Region "IDisposable"
 
-    Protected Overrides Sub Dispose(ByVal disposing As Boolean)
+    ''' <summary>
+    ''' Disposes the current reader.
+    ''' </summary>
+    ''' <param name="disposing">Boolean. Flag whether we're dispoosing or getting collected..</param>
+    ''' <remarks></remarks>
+    Protected Overridable Sub Dispose(ByVal disposing As Boolean)
         If Not _disposed Then
             If disposing Then
-                Me.DataTable.Dispose()
+                If _parser IsNot Nothing Then
+                    _parser.Dispose()
+                End If
             End If
-
-            _disposed = True
+            ' TODO: free your own state (unmanaged objects).
+            ' TODO: set large fields to null.
         End If
+        _disposed = True
+    End Sub
 
-        MyBase.Dispose(disposing)
+    Public Sub Dispose() Implements IDisposable.Dispose
+        Dispose(True)
+        GC.SuppressFinalize(Me)
     End Sub
 
 #End Region
