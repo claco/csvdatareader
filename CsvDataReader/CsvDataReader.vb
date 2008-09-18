@@ -14,7 +14,8 @@ Public Class CsvDataReader
 
 #Region "Privates"
 
-    Private Const DEFAULT_COLUMN_SEPARATOR As String = ","
+    Private Const DEFAULT_FIELD_SEPARATOR As String = ","
+    Private Const DEFAULT_FIELD_DELIMITER As String = """"
     Private Const DEFAULT_FIELD_TYPE As FieldType = FieldType.Delimited
 
     Private Shared ReadOnly Log As ILog = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod.DeclaringType)
@@ -26,6 +27,8 @@ Public Class CsvDataReader
     Private _isClosed As Boolean = True
     Private _parser As TextFieldParser = Nothing
     Private _path As String = String.Empty
+    Private _fieldSeparator As String = DEFAULT_FIELD_SEPARATOR
+    Private _fieldType As FieldType = DEFAULT_FIELD_TYPE
 
 #End Region
 
@@ -49,6 +52,7 @@ Public Class CsvDataReader
     Public Sub New(ByVal path As String, ByVal encoding As Encoding)
         Me.Path = path
         Me.Encoding = encoding
+
     End Sub
 
     ''' <summary>
@@ -57,7 +61,7 @@ Public Class CsvDataReader
     ''' <param name="path">String. The full path to the file to reader.</param>
     ''' <param name="columns">Collection(Of DataColumn). The collection of column definitions for the specified files columns.</param>
     ''' <remarks></remarks>
-    Public Sub New(ByVal path As String, ByVal columns As Collection(Of DataColumn))
+    Public Sub New(ByVal path As String, ByVal columns As Collection(Of CsvDataColumn))
         Me.Path = path
 
         For Each column As DataColumn In columns
@@ -72,7 +76,7 @@ Public Class CsvDataReader
     ''' <param name="columns">Collection(Of DataColumn). The collection of column definitions for the specified files columns.</param>
     ''' <param name="encoding">Encoding. The encoding of the specified file.</param>
     ''' <remarks></remarks>
-    Public Sub New(ByVal path As String, ByVal columns As Collection(Of DataColumn), ByVal encoding As Encoding)
+    Public Sub New(ByVal path As String, ByVal columns As Collection(Of CsvDataColumn), ByVal encoding As Encoding)
         Me.Path = path
         Me.Encoding = encoding
 
@@ -86,18 +90,36 @@ Public Class CsvDataReader
 #Region "Properties"
 
     ''' <summary>
-    ''' The private TextFieldParser instance.
+    ''' Creates a new TextFieldParser instance using the current settings.
     ''' </summary>
     ''' <value></value>
     ''' <returns>TextFieldParser</returns>
     ''' <remarks></remarks>
-    Private ReadOnly Property Parser() As TextFieldParser
+    Protected Overridable ReadOnly Property Parser() As TextFieldParser
         Get
             If _parser Is Nothing Then
+                If Me.DataTable.Columns.Count = 0 And Me.FieldType = FileIO.FieldType.FixedWidth Then
+                    Throw New MalformedLineException("Unable to parse fixed width columns with no column definitions")
+                End If
+
+
                 _parser = New TextFieldParser(Me.Path, Me.Encoding)
-                _parser.SetDelimiters(DEFAULT_COLUMN_SEPARATOR)
-                _parser.TextFieldType = FieldType.Delimited
+                _parser.TextFieldType = Me.FieldType
+                _parser.HasFieldsEnclosedInQuotes = True
                 _parser.TrimWhiteSpace = True
+
+                If Me.FieldType = FileIO.FieldType.FixedWidth Then
+                    Dim columns As DataColumnCollection = Me.DataTable.Columns
+                    Dim lengths(columns.Count - 1) As Integer
+
+                    For i As Integer = 0 To columns.Count - 1
+                        lengths(i) = DirectCast(columns.Item(i), CsvDataColumn).FieldWidth
+                    Next
+
+                    _parser.FieldWidths = lengths
+                Else
+                    _parser.SetDelimiters(Me.FieldSeparator)
+                End If
             End If
 
             Return _parser
@@ -135,6 +157,44 @@ Public Class CsvDataReader
         End Get
         Set(ByVal value As Encoding)
             _encoding = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets/sets the character(s) used to separate fields from one another.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>String</returns>
+    ''' <remarks></remarks>
+    Public Property FieldSeparator() As String
+        Get
+            Return _fieldSeparator
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                Me.FieldType = FileIO.FieldType.Delimited
+            End If
+
+            _fieldSeparator = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets/sets the type if fields in the file (Delimited or FixedWidth)
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>FieldType</returns>
+    ''' <remarks></remarks>
+    Public Property FieldType() As FieldType
+        Get
+            Return _fieldType
+        End Get
+        Set(ByVal value As FieldType)
+            If value = FileIO.FieldType.FixedWidth Then
+                Me.FieldSeparator = String.Empty
+            End If
+
+            _fieldType = value
         End Set
     End Property
 
@@ -248,17 +308,23 @@ Public Class CsvDataReader
             _isClosed = False
 
             Dim fields() As String = Me.Parser.ReadFields
-
+            Debug.WriteLine(fields.Length)
             REM Turn empty strings into Nothing, which Row turns to DbNull if the Column allows it
             REM Row.Add will throw an exception if the column does not allow nulls
             For f = 0 To fields.Length - 1
                 Dim value As String = fields(f)
+
+                Log.DebugFormat("Field({0})={1}", f, value)
+                Log.DebugFormat("Field({0}).Length={1}", f, value.Length)
 
                 If String.IsNullOrEmpty(value) Then
                     fields(f) = Nothing
                 Else
                     fields(f) = value
                 End If
+
+                Log.DebugFormat("Field({0})={1}", f, value)
+                Log.DebugFormat("Field({0}).Length={1}", f, value.Length)
             Next
 
             Me.DataTable.Rows.Add(fields)
