@@ -1,9 +1,10 @@
-﻿Imports System.Data
+﻿Imports Microsoft.VisualBasic.FileIO
+Imports System.Data
 Imports System.Text
+Imports System.Text.RegularExpressions
 Imports System.IO
 Imports System.Collections.ObjectModel
 Imports log4net
-Imports Microsoft.VisualBasic.FileIO
 
 ''' <summary>
 ''' Implements an IDataReader fo Csv data files.
@@ -17,6 +18,31 @@ Public Class CsvDataReader
     Private Const DEFAULT_FIELD_SEPARATOR As String = ","
     Private Const DEFAULT_FIELD_DELIMITER As String = """"
     Private Const DEFAULT_FIELD_TYPE As FieldType = FieldType.Delimited
+    Private Const DEFAULT_SCHEMA_FILE As String = "scheme.ini"
+
+    REM Standard schema.ini formats
+    Private Const SCHEMA_FORMAT_TAB_DELIMITED As String = "TABDELIMITED"
+    Private Const SCHEMA_FORMAT_CSV_DELIMITED As String = "CSVDELIMITED"
+    Private Const SCHEMA_FORMAT_FIXED_LENGTH As String = "FIXEDLENGTH"
+
+    REM Standard schema.ini types
+    Private Const SCHEMA_COLUMN_TYPE_CHAR As String = "CHAR"
+    Private Const SCHEMA_COLUMN_TYPE_TEXT As String = "TEXT"
+    Private Const SCHEMA_COLUMN_TYPE_FLOAT As String = "FLOAT"
+    Private Const SCHEMA_COLUMN_TYPE_DOUBLE As String = "DOUBLE"
+    Private Const SCHEMA_COLUMN_TYPE_INTEGER As String = "INTEGER"
+    Private Const SCHEMA_COLUMN_TYPE_SHORT As String = "SHORT"
+    Private Const SCHEMA_COLUMN_TYPE_LONGCHAR As String = "LONGCHAR"
+    Private Const SCHEMA_COLUMN_TYPE_MEMO As String = "MEMO"
+    Private Const SCHEMA_COLUMN_TYPE_DATE As String = "DATE"
+
+    REM Non-standard schema.ini types
+    Private Const SCHEMA_COLUMN_TYPE_DATETIME As String = "DATETIME"
+    Private Const SCHEMA_COLUMN_TYPE_DECIMAL As String = "DECIMAL"
+    Private Const SCHEMA_COLUMN_TYPE_GUID As String = "GUID"
+    Private Const SCHEMA_COLUMN_TYPE_BOOLEAN As String = "BOOLEAN"
+    Private Const SCHEMA_COLUMN_TYPE_BIT As String = "BIT"
+
 
     Private Shared ReadOnly Log As ILog = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod.DeclaringType)
 
@@ -29,6 +55,14 @@ Public Class CsvDataReader
     Private _path As String = String.Empty
     Private _fieldSeparator As String = DEFAULT_FIELD_SEPARATOR
     Private _fieldType As FieldType = DEFAULT_FIELD_TYPE
+    Private _schemaFile As String = DEFAULT_SCHEMA_FILE
+    Private _schemaSection As String = String.Empty
+
+    Private Declare Unicode Function GetPrivateProfileSection Lib "kernel32" Alias "GetPrivateProfileSectionW" ( _
+        ByVal lpApplicationName As String, _
+        ByVal lpReturnedString() As Char, _
+        ByVal nSize As Int32, _
+        ByVal lpFileName As String) As Int32
 
 #End Region
 
@@ -241,6 +275,120 @@ Public Class CsvDataReader
 
         Return columns
     End Function
+
+    Protected Overridable Function GetColumnsFromSchemaFile() As Collection(Of DataColumn)
+        Dim columns As New Collection(Of DataColumn)
+
+        Dim section As String = Me.SchemaSection
+        If String.IsNullOrEmpty(section) Then
+            Dim file As FileInfo = New FileInfo(Me.Path)
+
+            section = file.Name
+        End If
+
+        Dim buffer(1024) As Char
+        Dim count As Integer = GetPrivateProfileSection(section, buffer, 1024, Me.SchemaFile)
+
+        If count > 0 Then
+            Dim result As New String(buffer)
+            Dim separators() As Char = {vbNullChar}
+            Dim fields() As String = result.Trim("").Split(separators)
+            Dim settings As New Dictionary(Of String, String)
+            Dim cols As New Collection(Of String)
+
+            For Each f In fields
+                Dim pair() As String = f.Split("=")
+
+                If pair(0).Substring(0, 3).ToLower = "col" And pair(0).Trim.ToLower <> "colnameheader" Then
+                    Log.DebugFormat("Column {0}", pair(1))
+                    cols.Add(pair(1).Trim)
+                Else
+                    Log.DebugFormat("Setting {0}", f)
+                    settings(pair(0).Trim.ToLower) = pair(1).Trim
+                End If
+            Next
+
+            Select Case settings("format").ToUpper
+                Case SCHEMA_FORMAT_TAB_DELIMITED
+                    Me.FieldType = FileIO.FieldType.Delimited
+                    Me.FieldSeparator = vbTab
+                Case SCHEMA_FORMAT_CSV_DELIMITED
+                    Me.FieldType = FileIO.FieldType.Delimited
+                    Me.FieldSeparator = ","
+                Case SCHEMA_FORMAT_FIXED_LENGTH
+                    Me.FieldType = FileIO.FieldType.FixedWidth
+            End Select
+
+            Dim split As New Regex("\s+", RegexOptions.Compiled)
+            For Each col As String In cols
+                Dim parts() As String = split.Split(col)
+
+                For Each part As String In parts
+                    Log.DebugFormat("Column Part: {0}", part)
+                Next
+
+                Dim column As New CsvDataColumn(parts(0).Trim)
+                Select Case parts(1).Trim.ToUpper
+                    Case SCHEMA_COLUMN_TYPE_DATE, SCHEMA_COLUMN_TYPE_DATETIME
+                        column.DataType = GetType(DateTime)
+                    Case SCHEMA_COLUMN_TYPE_DOUBLE
+                        column.DataType = GetType(Double)
+                    Case SCHEMA_COLUMN_TYPE_FLOAT
+                        column.DataType = GetType(Single)
+                    Case SCHEMA_COLUMN_TYPE_INTEGER
+                        column.DataType = GetType(Integer)
+                    Case SCHEMA_COLUMN_TYPE_SHORT
+                        column.DataType = GetType(Short)
+                    Case SCHEMA_COLUMN_TYPE_TEXT, SCHEMA_COLUMN_TYPE_CHAR, SCHEMA_COLUMN_TYPE_LONGCHAR, SCHEMA_COLUMN_TYPE_MEMO
+                        column.DataType = GetType(String)
+                    Case SCHEMA_COLUMN_TYPE_DECIMAL
+                        column.DataType = GetType(Decimal)
+                    Case SCHEMA_COLUMN_TYPE_GUID
+                        column.DataType = GetType(Guid)
+                    Case SCHEMA_COLUMN_TYPE_BOOLEAN, SCHEMA_COLUMN_TYPE_BIT
+                        column.DataType = GetType(Boolean)
+                End Select
+
+                If parts.Length = 4 Then
+                    column.FieldWidth = parts(3)
+                End If
+
+                columns.Add(column)
+            Next
+        End If
+
+        Return columns
+    End Function
+
+    ''' <summary>
+    ''' Gets/sets the name and path of the schema file containing the column definitions.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>String</returns>
+    ''' <remarks>The default file name is schema.ini in the same directory as the csv file.</remarks>
+    Public Overridable Property SchemaFile() As String
+        Get
+            Return _schemaFile
+        End Get
+        Set(ByVal value As String)
+            _schemaFile = value.Trim
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets/sets the section in the schema file containing the column definitions.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>String</returns>
+    ''' <remarks>If no section is given, the name of the file will be used.</remarks>
+    Public Overridable Property SchemaSection() As String
+        Get
+            Return _schemaSection
+        End Get
+        Set(ByVal value As String)
+            _schemaSection = value.Trim
+        End Set
+    End Property
 
 #End Region
 
@@ -660,11 +808,17 @@ Public Class CsvDataReader
     ''' Ensures that file is read to determine columns from the header line if columns are not already defined.
     ''' </summary>
     ''' <remarks></remarks>
-    Protected Sub EnsureColumns()
+    Protected Overridable Sub EnsureColumns()
         If Me.DataTable.Columns.Count = 0 Then
-            For Each column As DataColumn In Me.GetColumnsFromFirstRow
-                Me.DataTable.Columns.Add(column)
-            Next
+            If Not String.IsNullOrEmpty(Me.SchemaFile) And File.Exists(Me.SchemaFile) Then
+                For Each column As DataColumn In Me.GetColumnsFromSchemaFile
+                    Me.DataTable.Columns.Add(column)
+                Next
+            Else
+                For Each column As DataColumn In Me.GetColumnsFromFirstRow
+                    Me.DataTable.Columns.Add(column)
+                Next
+            End If
         End If
     End Sub
 

@@ -22,6 +22,15 @@ Public Class CsvDataColumn
     ''' Creates a new CsvDataColumn
     ''' </summary>
     ''' <param name="columnName">String. The name of the column.</param>
+    ''' <remarks></remarks>
+    Public Sub New(ByVal columnName As String)
+        MyBase.New(columnName)
+    End Sub
+
+    ''' <summary>
+    ''' Creates a new CsvDataColumn
+    ''' </summary>
+    ''' <param name="columnName">String. The name of the column.</param>
     ''' <param name="dataType">Type. The data type of the column value.</param>
     ''' <remarks></remarks>
     Public Sub New(ByVal columnName As String, ByVal dataType As System.Type)

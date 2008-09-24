@@ -80,6 +80,15 @@ Public Class CsvDataReaderTests
         End Using
     End Sub
 
+    <Test(Description:="Test Csv file with defined columns in schema")> _
+    Public Sub CsvWithSchema()
+        Using reader As IDataReader = New CsvDataReader("data\noheader.csv")
+            DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
+
+            ValidateColumnedReader(reader)
+        End Using
+    End Sub
+
 #End Region
 
 #Region "Tab Seperated Values Tests"
@@ -109,6 +118,15 @@ Public Class CsvDataReaderTests
             For c As Integer = 0 To schemaTable.Columns.Count - 1
                 Me.AreEqual(columns.Item(c), schemaTable.Columns.Item(c))
             Next
+
+            ValidateColumnedReader(reader)
+        End Using
+    End Sub
+
+    <Test(Description:="Test tab delimited file with defined columns in schema")> _
+    Public Sub TsvWithSchema()
+        Using reader As IDataReader = New CsvDataReader("data\noheader.tsv")
+            DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
 
             ValidateColumnedReader(reader)
         End Using
@@ -147,6 +165,15 @@ Public Class CsvDataReaderTests
             For c As Integer = 0 To schemaTable.Columns.Count - 1
                 Me.AreEqual(columns.Item(c), schemaTable.Columns.Item(c))
             Next
+
+            ValidateColumnedReader(reader)
+        End Using
+    End Sub
+
+    <Test(Description:="Test fixed width file with defined columns in schema")> _
+    Public Sub FixedWidthWithSchema()
+        Using reader As IDataReader = New CsvDataReader("data\fixed.txt")
+            DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
 
             ValidateColumnedReader(reader)
         End Using
