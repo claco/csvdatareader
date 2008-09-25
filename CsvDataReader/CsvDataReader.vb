@@ -37,6 +37,7 @@ Public Class CsvDataReader
     Private Const SCHEMA_COLUMN_TYPE_DATE As String = "DATE"
 
     REM Non-standard schema.ini types
+    Private Const SCHEMA_COLUMN_TYPE_STRING As String = "STRING"
     Private Const SCHEMA_COLUMN_TYPE_DATETIME As String = "DATETIME"
     Private Const SCHEMA_COLUMN_TYPE_DECIMAL As String = "DECIMAL"
     Private Const SCHEMA_COLUMN_TYPE_GUID As String = "GUID"
@@ -339,7 +340,7 @@ Public Class CsvDataReader
                         column.DataType = GetType(Integer)
                     Case SCHEMA_COLUMN_TYPE_SHORT
                         column.DataType = GetType(Short)
-                    Case SCHEMA_COLUMN_TYPE_TEXT, SCHEMA_COLUMN_TYPE_CHAR, SCHEMA_COLUMN_TYPE_LONGCHAR, SCHEMA_COLUMN_TYPE_MEMO
+                    Case SCHEMA_COLUMN_TYPE_TEXT, SCHEMA_COLUMN_TYPE_CHAR, SCHEMA_COLUMN_TYPE_LONGCHAR, SCHEMA_COLUMN_TYPE_MEMO, SCHEMA_COLUMN_TYPE_STRING
                         column.DataType = GetType(String)
                     Case SCHEMA_COLUMN_TYPE_DECIMAL
                         column.DataType = GetType(Decimal)

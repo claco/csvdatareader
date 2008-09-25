@@ -49,6 +49,9 @@ Public Class CsvDataReaderTests
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
+        columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
+        columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
+        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
 
         Using reader As IDataReader = New CsvDataReader("data\noheader.csv", columns)
             Dim schemaTable As DataTable = reader.GetSchemaTable
@@ -69,6 +72,9 @@ Public Class CsvDataReaderTests
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
+        columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
+        columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
+        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
 
         Using reader As IDataReader = New CsvDataReader("data\noheader.csv", columns, System.Text.Encoding.ASCII)
             Dim schemaTable As DataTable = reader.GetSchemaTable
@@ -86,6 +92,16 @@ Public Class CsvDataReaderTests
             DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
 
             ValidateColumnedReader(reader)
+        End Using
+    End Sub
+
+    <Test(Description:="Test Csv file with defined columns in schema in a different section name")> _
+    Public Sub CsvWithSchemaDifferentSection()
+        Using reader As IDataReader = New CsvDataReader("data\noheader.csv")
+            DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
+            DirectCast(reader, CsvDataReader).SchemaSection = "testnoheader"
+
+            ValidateHeaderedReader(reader)
         End Using
     End Sub
 
@@ -110,6 +126,9 @@ Public Class CsvDataReaderTests
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
+        columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
+        columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
+        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
 
         Using reader As IDataReader = New CsvDataReader("data\noheader.tsv", columns)
             DirectCast(reader, CsvDataReader).FieldSeparator = vbTab
@@ -155,6 +174,9 @@ Public Class CsvDataReaderTests
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal), 8))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid), 38))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean), 5))
+        columns.Add(New CsvDataColumn("SHORT", GetType(Short), 1))
+        columns.Add(New CsvDataColumn("DOUBLE", GetType(Double), 5))
+        columns.Add(New CsvDataColumn("FLOAT", GetType(Single), 4))
 
         Using reader As IDataReader = New CsvDataReader("data\fixed.txt", columns)
             DirectCast(reader, CsvDataReader).FieldSeparator = ","
@@ -190,7 +212,7 @@ Public Class CsvDataReaderTests
 
     Private Sub ValidateColumnedReader(ByVal reader As IDataReader)
         Assert.IsInstanceOfType(GetType(CsvDataReader), reader, "Is instance of CsvDataReader")
-        Assert.AreEqual(6, reader.FieldCount, "Has correct number of fields")
+        Assert.AreEqual(9, reader.FieldCount, "Has correct number of fields")
         Assert.AreEqual(0, reader.Depth, "Depth is always zero")
 
         Assert.AreEqual("STRING", reader.GetName(0), "Has first column name")
@@ -217,11 +239,24 @@ Public Class CsvDataReaderTests
         Assert.AreEqual("Boolean", reader.GetDataTypeName(5), "Sixth column type name is Boolean")
         Assert.AreEqual(5, reader.GetOrdinal("BOOLEAN"), "Sixth column ordinal is correct")
 
+        Assert.AreEqual("SHORT", reader.GetName(6), "Has seventh column name")
+        Assert.AreEqual("Int16", reader.GetDataTypeName(6), "Seventh column type name is Int16")
+        Assert.AreEqual(6, reader.GetOrdinal("SHORT"), "Seventh column ordinal is correct")
+
+        Assert.AreEqual("DOUBLE", reader.GetName(7), "Has eighth column name")
+        Assert.AreEqual("Double", reader.GetDataTypeName(7), "Eighth column type name is Double")
+        Assert.AreEqual(7, reader.GetOrdinal("DOUBLE"), "Eighth column ordinal is correct")
+
+        Assert.AreEqual("FLOAT", reader.GetName(8), "Has nineth column name")
+        Assert.AreEqual("Single", reader.GetDataTypeName(8), "Nineth column type name is Single")
+        Assert.AreEqual(8, reader.GetOrdinal("FLOAT"), "Nineth column ordinal is correct")
+
+
 
         Assert.IsTrue(reader.Read, "Read first line")
         Dim values(reader.FieldCount - 1) As Object
-        Assert.AreEqual(6, reader.GetValues(values), "GetValues returns the number of columns")
-        Assert.AreEqual(6, values.Length, "Values array has corrent length")
+        Assert.AreEqual(9, reader.GetValues(values), "GetValues returns the number of columns")
+        Assert.AreEqual(9, values.Length, "Values array has corrent length")
 
         Assert.AreEqual("Chris,topher", reader.GetString(0), "First column value is correct")
         Assert.AreEqual(GetType(String), reader.GetFieldType(0), "First column is System.String")
@@ -317,6 +352,28 @@ Public Class CsvDataReaderTests
         Assert.AreEqual(values(5), reader.Item(reader.GetName(5)), "GetValues item sames as Item")
         Assert.AreEqual("T", reader.GetChar(5).ToString, "GetChar returns first character")
 
+        Assert.AreEqual("4", reader.GetString(6), "Seventh column value is correct")
+        Assert.AreEqual(Convert.ToSingle(4), reader.GetFloat(6), "Seventh column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(4), reader.GetDouble(6), "Seventh column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(4), reader.GetDecimal(6), "Seventh column value is correct as Decimal")
+        Assert.AreEqual(GetType(Int16), reader.GetFieldType(6), "Seventh column is System.String")
+        Assert.IsFalse(reader.IsDBNull(6), "Seventh column is not null")
+
+        Assert.AreEqual("23.45", reader.GetString(7), "Eighth column value is correct")
+        Assert.AreEqual(Convert.ToSingle(23.45), reader.GetFloat(7), "Eighth column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(23.45), reader.GetDouble(7), "Eighth column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(23.45), reader.GetDecimal(7), "Eighth column value is correct as Decimal")
+        Assert.AreEqual(GetType(Double), reader.GetFieldType(7), "Eighth column is System.Double")
+        Assert.IsFalse(reader.IsDBNull(7), "Eighth column is not null")
+
+        Assert.AreEqual("1.23", reader.GetString(8), "Nineth column value is correct")
+        Assert.AreEqual(Convert.ToSingle(1.23), reader.GetFloat(8), "Nineth column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(Convert.ToSingle(1.23)), reader.GetDouble(8), "Nineth column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(1.23), reader.GetDecimal(8), "Nineth column value is correct as Decimal")
+        Assert.AreEqual(GetType(Single), reader.GetFieldType(8), "Nineth column is System.Single")
+        Assert.IsFalse(reader.IsDBNull(8), "Nineth column is not null")
+
+
 
         Assert.IsTrue(reader.Read, "Read second line")
         Array.Clear(values, 0, values.Length)
@@ -362,6 +419,27 @@ Public Class CsvDataReaderTests
         Assert.AreEqual(GetType(Boolean), reader.GetFieldType(5), "Sixth column is System.Boolean")
         Assert.IsFalse(reader.IsDBNull(5), "Sixth column is not null")
 
+        Assert.AreEqual("5", reader.GetString(6), "Seventh column value is correct")
+        Assert.AreEqual(Convert.ToSingle(5), reader.GetFloat(6), "Seventh column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(5), reader.GetDouble(6), "Seventh column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(5), reader.GetDecimal(6), "Seventh column value is correct as Decimal")
+        Assert.AreEqual(GetType(Int16), reader.GetFieldType(6), "Seventh column is System.String")
+        Assert.IsFalse(reader.IsDBNull(6), "Seventh column is not null")
+
+        Assert.AreEqual("34.56", reader.GetString(7), "Eighth column value is correct")
+        Assert.AreEqual(Convert.ToSingle(34.56), reader.GetFloat(7), "Eighth column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(34.56), reader.GetDouble(7), "Eighth column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(34.56), reader.GetDecimal(7), "Eighth column value is correct as Decimal")
+        Assert.AreEqual(GetType(Double), reader.GetFieldType(7), "Eighth column is System.Double")
+        Assert.IsFalse(reader.IsDBNull(7), "Eighth column is not null")
+
+        Assert.AreEqual("2.35", reader.GetString(8), "Nineth column value is correct")
+        Assert.AreEqual(Convert.ToSingle(2.35), reader.GetFloat(8), "Nineth column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(Convert.ToSingle(2.35)), reader.GetDouble(8), "Nineth column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(2.35), reader.GetDecimal(8), "Nineth column value is correct as Decimal")
+        Assert.AreEqual(GetType(Single), reader.GetFieldType(8), "Nineth column is System.Single")
+        Assert.IsFalse(reader.IsDBNull(8), "Nineth column is not null")
+
         Assert.IsFalse(reader.IsClosed, "Reader is still open until last read")
         Assert.IsFalse(reader.Read, "End of file")
         Assert.IsFalse(reader.NextResult, "NextResult always returns false")
@@ -380,7 +458,7 @@ Public Class CsvDataReaderTests
 
     Private Sub ValidateHeaderedReader(ByVal reader As IDataReader)
         Assert.IsInstanceOfType(GetType(CsvDataReader), reader, "Is instance of CsvDataReader")
-        Assert.AreEqual(6, reader.FieldCount, "Has correct number of fields")
+        Assert.AreEqual(9, reader.FieldCount, "Has correct number of fields")
         Assert.AreEqual(0, reader.Depth, "Depth is always zero")
 
         Assert.AreEqual("STRING", reader.GetName(0), "Has first column name")
@@ -407,11 +485,24 @@ Public Class CsvDataReaderTests
         Assert.AreEqual("String", reader.GetDataTypeName(5), "Sixth column type name is String")
         Assert.AreEqual(5, reader.GetOrdinal("BOOLEAN"), "Sixth column ordinal is correct")
 
+        Assert.AreEqual("SHORT", reader.GetName(6), "Has seventh column name")
+        Assert.AreEqual("String", reader.GetDataTypeName(6), "Seventh column type name is String")
+        Assert.AreEqual(6, reader.GetOrdinal("SHORT"), "Seventh column ordinal is correct")
+
+        Assert.AreEqual("DOUBLE", reader.GetName(7), "Has eighth column name")
+        Assert.AreEqual("String", reader.GetDataTypeName(7), "Eighth column type name is String")
+        Assert.AreEqual(7, reader.GetOrdinal("DOUBLE"), "Eighth column ordinal is correct")
+
+        Assert.AreEqual("FLOAT", reader.GetName(8), "Has nineth column name")
+        Assert.AreEqual("String", reader.GetDataTypeName(8), "Nineth column type name is String")
+        Assert.AreEqual(8, reader.GetOrdinal("FLOAT"), "Nineth column ordinal is correct")
+
+
 
         Assert.IsTrue(reader.Read, "Read first line")
         Dim values(reader.FieldCount - 1) As Object
-        Assert.AreEqual(6, reader.GetValues(values), "GetValues returns the number of columns")
-        Assert.AreEqual(6, values.Length, "Values array has corrent length")
+        Assert.AreEqual(9, reader.GetValues(values), "GetValues returns the number of columns")
+        Assert.AreEqual(9, values.Length, "Values array has corrent length")
 
         Assert.AreEqual("Chris,topher", reader.GetString(0), "First column value is correct")
         Assert.AreEqual(GetType(String), reader.GetFieldType(0), "First column is System.String")
@@ -511,6 +602,28 @@ Public Class CsvDataReaderTests
         Assert.AreEqual(values(5), reader.Item(reader.GetName(5)), "GetValues item sames as Item")
         Assert.AreEqual("T", reader.GetChar(5).ToString, "GetChar returns first character")
 
+        Assert.AreEqual("4", reader.GetString(6), "Seventh column value is correct")
+        Assert.AreEqual(Convert.ToSingle(4), reader.GetFloat(6), "Seventh column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(4), reader.GetDouble(6), "Seventh column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(4), reader.GetDecimal(6), "Seventh column value is correct as Decimal")
+        Assert.AreEqual(GetType(String), reader.GetFieldType(6), "Seventh column is System.String")
+        Assert.IsFalse(reader.IsDBNull(6), "Seventh column is not null")
+
+        Assert.AreEqual("23.45", reader.GetString(7), "Eighth column value is correct")
+        Assert.AreEqual(Convert.ToSingle(23.45), reader.GetFloat(7), "Eighth column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(23.45), reader.GetDouble(7), "Eighth column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(23.45), reader.GetDecimal(7), "Eighth column value is correct as String")
+        Assert.AreEqual(GetType(String), reader.GetFieldType(7), "Eighth column is System.String")
+        Assert.IsFalse(reader.IsDBNull(7), "Eighth column is not null")
+
+        Assert.AreEqual("1.23", reader.GetString(8), "Nineth column value is correct")
+        Assert.AreEqual(Convert.ToSingle(1.23), reader.GetFloat(8), "Nineth column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(1.23), reader.GetDouble(8), "Nineth column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(1.23), reader.GetDecimal(8), "Nineth column value is correct as Decimal")
+        Assert.AreEqual(GetType(String), reader.GetFieldType(8), "Nineth column is System.String")
+        Assert.IsFalse(reader.IsDBNull(8), "Nineth column is not null")
+
+
 
         Assert.IsTrue(reader.Read, "Read second line")
         Array.Clear(values, 0, values.Length)
@@ -555,6 +668,27 @@ Public Class CsvDataReaderTests
         Assert.IsFalse(reader.GetBoolean(5), "Sixth column value is correct as Boolean")
         Assert.AreEqual(GetType(String), reader.GetFieldType(5), "Sixth column is System.String")
         Assert.IsFalse(reader.IsDBNull(5), "Sixth column is not null")
+
+        Assert.AreEqual("5", reader.GetString(6), "Seventh column value is correct")
+        Assert.AreEqual(Convert.ToSingle(5), reader.GetFloat(6), "Seventh column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(5), reader.GetDouble(6), "Seventh column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(5), reader.GetDecimal(6), "Seventh column value is correct as Decimal")
+        Assert.AreEqual(GetType(String), reader.GetFieldType(6), "Seventh column is System.String")
+        Assert.IsFalse(reader.IsDBNull(6), "Seventh column is not null")
+
+        Assert.AreEqual("34.56", reader.GetString(7), "Eighth column value is correct")
+        Assert.AreEqual(Convert.ToSingle(34.56), reader.GetFloat(7), "Eighth column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(34.56), reader.GetDouble(7), "Eighth column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(34.56), reader.GetDecimal(7), "Eighth column value is correct as Decimal")
+        Assert.AreEqual(GetType(String), reader.GetFieldType(7), "Eighth column is System.Double")
+        Assert.IsFalse(reader.IsDBNull(7), "Eighth column is not null")
+
+        Assert.AreEqual("2.35", reader.GetString(8), "Nineth column value is correct")
+        Assert.AreEqual(Convert.ToSingle(2.35), reader.GetFloat(8), "Nineth column value is correct as Float/Single")
+        Assert.AreEqual(Convert.ToDouble(2.35), reader.GetDouble(8), "Nineth column value is correct as Double")
+        Assert.AreEqual(Convert.ToDecimal(2.35), reader.GetDecimal(8), "Nineth column value is correct as Decimal")
+        Assert.AreEqual(GetType(String), reader.GetFieldType(8), "Nineth column is System.Single")
+        Assert.IsFalse(reader.IsDBNull(8), "Nineth column is not null")
 
         Assert.IsFalse(reader.IsClosed, "Reader is still open until last read")
         Assert.IsFalse(reader.Read, "End of file")
