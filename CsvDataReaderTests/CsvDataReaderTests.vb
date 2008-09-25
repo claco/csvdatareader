@@ -153,6 +153,44 @@ Public Class CsvDataReaderTests
 
 #End Region
 
+#Region "Other Separater Tests"
+
+    <Test(Description:="Test Psv file with defined columns")> _
+    Public Sub PsvWithColumns()
+        Dim columns As New Collection(Of CsvDataColumn)
+        columns.Add(New CsvDataColumn("STRING", GetType(String)))
+        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer)))
+        columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime)))
+        columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
+        columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
+        columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
+        columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
+        columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
+        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
+
+        Using reader As IDataReader = New CsvDataReader("data\noheader.psv", columns)
+            DirectCast(reader, CsvDataReader).FieldSeparator = "|"
+
+            Dim schemaTable As DataTable = reader.GetSchemaTable
+            For c As Integer = 0 To schemaTable.Columns.Count - 1
+                Me.AreEqual(columns.Item(c), schemaTable.Columns.Item(c))
+            Next
+
+            ValidateColumnedReader(reader)
+        End Using
+    End Sub
+
+    <Test(Description:="Test pipe separated file with defined columns in schema")> _
+    Public Sub PsvWithSchema()
+        Using reader As IDataReader = New CsvDataReader("data\noheader.psv")
+            DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
+
+            ValidateColumnedReader(reader)
+        End Using
+    End Sub
+
+#End Region
+
 #Region "Fixed Field Tests"
 
     <Test(Description:="Test fixed width file without columns")> _

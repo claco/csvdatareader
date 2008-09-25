@@ -88,6 +88,9 @@
     <Content Include="data\fixed.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="data\noheader.psv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="data\noheader.tsv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

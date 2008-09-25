@@ -21,9 +21,10 @@ Public Class CsvDataReader
     Private Const DEFAULT_SCHEMA_FILE As String = "scheme.ini"
 
     REM Standard schema.ini formats
-    Private Const SCHEMA_FORMAT_TAB_DELIMITED As String = "TABDELIMITED"
-    Private Const SCHEMA_FORMAT_CSV_DELIMITED As String = "CSVDELIMITED"
-    Private Const SCHEMA_FORMAT_FIXED_LENGTH As String = "FIXEDLENGTH"
+    Private Const SCHEMA_FORMAT_TAB_DELIMITED As String = "TabDelimited"
+    Private Const SCHEMA_FORMAT_CSV_DELIMITED As String = "CsvDelimited"
+    Private Const SCHEMA_FORMAT_FIXED_LENGTH As String = "FixedLength"
+    Private Const SCHEMA_FORMAT_DELIMITED As String = "Delimited\((.*)\)"
 
     REM Standard schema.ini types
     Private Const SCHEMA_COLUMN_TYPE_CHAR As String = "CHAR"
@@ -309,16 +310,19 @@ Public Class CsvDataReader
                 End If
             Next
 
-            Select Case settings("format").ToUpper
-                Case SCHEMA_FORMAT_TAB_DELIMITED
-                    Me.FieldType = FileIO.FieldType.Delimited
-                    Me.FieldSeparator = vbTab
-                Case SCHEMA_FORMAT_CSV_DELIMITED
-                    Me.FieldType = FileIO.FieldType.Delimited
-                    Me.FieldSeparator = ","
-                Case SCHEMA_FORMAT_FIXED_LENGTH
-                    Me.FieldType = FileIO.FieldType.FixedWidth
-            End Select
+            Dim format As String = settings("format")
+            If Regex.IsMatch(format, SCHEMA_FORMAT_TAB_DELIMITED, RegexOptions.IgnoreCase) Then
+                Me.FieldType = FileIO.FieldType.Delimited
+                Me.FieldSeparator = vbTab
+            ElseIf Regex.IsMatch(format, SCHEMA_FORMAT_CSV_DELIMITED, RegexOptions.IgnoreCase) Then
+                Me.FieldType = FileIO.FieldType.Delimited
+                Me.FieldSeparator = ","
+            ElseIf Regex.IsMatch(format, SCHEMA_FORMAT_FIXED_LENGTH, RegexOptions.IgnoreCase) Then
+                Me.FieldType = FileIO.FieldType.FixedWidth
+            ElseIf Regex.IsMatch(format, SCHEMA_FORMAT_DELIMITED, RegexOptions.IgnoreCase) Then
+                Me.FieldType = FileIO.FieldType.Delimited
+                Me.FieldSeparator = Regex.Match(format, SCHEMA_FORMAT_DELIMITED, RegexOptions.IgnoreCase).Groups(1).Value
+            End If
 
             Dim split As New Regex("\s+", RegexOptions.Compiled)
             For Each col As String In cols
