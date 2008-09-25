@@ -741,6 +741,7 @@ Public Class CsvDataReaderTests
             Assert.IsInstanceOfType(GetType(NotImplementedException), ex, "GetData threw NotImplementedException")
         End Try
     End Sub
+
 End Class
 
 
