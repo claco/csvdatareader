@@ -59,6 +59,7 @@ Public Class CsvDataReader
     Private _fieldType As FieldType = DEFAULT_FIELD_TYPE
     Private _schemaFile As String = DEFAULT_SCHEMA_FILE
     Private _schemaSection As String = String.Empty
+    Private _stream As Stream = Nothing
 
     Private Declare Unicode Function GetPrivateProfileSection Lib "kernel32" Alias "GetPrivateProfileSectionW" ( _
         ByVal lpApplicationName As String, _
@@ -70,10 +71,66 @@ Public Class CsvDataReader
 
 #Region "Constructors"
 
+#Region "Stream Constructors"
+
+    ''' <summary>
+    ''' Creates a new CsvDataReader for the stream specified.
+    ''' </summary>
+    ''' <param name="stream">Stream. The stream of data to read.</param>
+    ''' <remarks></remarks>
+    Public Sub New(ByVal stream As Stream)
+        Me.Stream = stream
+    End Sub
+
+    ''' <summary>
+    ''' Creates a new CsvDataReader for the stream specified.
+    ''' </summary>
+    ''' <param name="stream">Stream. The stream of data to read.</param>
+    ''' <param name="encoding">Encoding. The encoding of the specified file.</param>
+    ''' <remarks></remarks>
+    Public Sub New(ByVal stream As Stream, ByVal encoding As Encoding)
+        Me.Stream = stream
+        Me.Encoding = encoding
+    End Sub
+
     ''' <summary>
     ''' Creates a new CsvDataReader for the file specified.
     ''' </summary>
-    ''' <param name="path">String. The full path to the file to reader.</param>
+    ''' <param name="stream">Stream. The stream of data to read.</param>
+    ''' <param name="columns">Collection(Of DataColumn). The collection of column definitions for the specified files columns.</param>
+    ''' <remarks></remarks>
+    Public Sub New(ByVal stream As Stream, ByVal columns As Collection(Of CsvDataColumn))
+        Me.Stream = stream
+
+        For Each column As DataColumn In columns
+            Me.DataTable.Columns.Add(column)
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' Creates a new CsvDataReader for the file specified.
+    ''' </summary>
+    ''' <param name="stream">Stream. The stream of data to read.</param>
+    ''' <param name="columns">Collection(Of DataColumn). The collection of column definitions for the specified files columns.</param>
+    ''' <param name="encoding">Encoding. The encoding of the specified file.</param>
+    ''' <remarks></remarks>
+    Public Sub New(ByVal stream As Stream, ByVal columns As Collection(Of CsvDataColumn), ByVal encoding As Encoding)
+        Me.Stream = stream
+        Me.Encoding = encoding
+
+        For Each column As DataColumn In columns
+            Me.DataTable.Columns.Add(column)
+        Next
+    End Sub
+
+#End Region
+
+#Region "Path Constructors"
+
+    ''' <summary>
+    ''' Creates a new CsvDataReader for the file specified.
+    ''' </summary>
+    ''' <param name="path">String. The full path to the file to read.</param>
     ''' <remarks></remarks>
     Public Sub New(ByVal path As String)
         Me.Path = path
@@ -82,19 +139,18 @@ Public Class CsvDataReader
     ''' <summary>
     ''' Creates a new CsvDataReader for the file specified.
     ''' </summary>
-    ''' <param name="path">String. The full path to the file to reader.</param>
+    ''' <param name="path">String. The full path to the file to read.</param>
     ''' <param name="encoding">Encoding. The encoding of the specified file.</param>
     ''' <remarks></remarks>
     Public Sub New(ByVal path As String, ByVal encoding As Encoding)
         Me.Path = path
         Me.Encoding = encoding
-
     End Sub
 
     ''' <summary>
     ''' Creates a new CsvDataReader for the file specified.
     ''' </summary>
-    ''' <param name="path">String. The full path to the file to reader.</param>
+    ''' <param name="path">String. The full path to the file to read.</param>
     ''' <param name="columns">Collection(Of DataColumn). The collection of column definitions for the specified files columns.</param>
     ''' <remarks></remarks>
     Public Sub New(ByVal path As String, ByVal columns As Collection(Of CsvDataColumn))
@@ -108,7 +164,7 @@ Public Class CsvDataReader
     ''' <summary>
     ''' Creates a new CsvDataReader for the file specified.
     ''' </summary>
-    ''' <param name="path">String. The full path to the file to reader.</param>
+    ''' <param name="path">String. The full path to the file to read.</param>
     ''' <param name="columns">Collection(Of DataColumn). The collection of column definitions for the specified files columns.</param>
     ''' <param name="encoding">Encoding. The encoding of the specified file.</param>
     ''' <remarks></remarks>
@@ -120,6 +176,8 @@ Public Class CsvDataReader
             Me.DataTable.Columns.Add(column)
         Next
     End Sub
+
+#End Region
 
 #End Region
 
@@ -138,8 +196,11 @@ Public Class CsvDataReader
                     Throw New MalformedLineException("Unable to parse fixed width columns with no column definitions")
                 End If
 
-
-                _parser = New TextFieldParser(Me.Path, Me.Encoding)
+                If Me.Stream IsNot Nothing Then
+                    _parser = New TextFieldParser(Me.Stream, Me.Encoding, True)
+                Else
+                    _parser = New TextFieldParser(Me.Path, Me.Encoding, True)
+                End If
                 _parser.TextFieldType = Me.FieldType
                 _parser.HasFieldsEnclosedInQuotes = True
                 _parser.TrimWhiteSpace = True
@@ -392,6 +453,21 @@ Public Class CsvDataReader
         End Get
         Set(ByVal value As String)
             _schemaSection = value.Trim
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets/sets the stream of text data to parse.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>Stream</returns>
+    ''' <remarks></remarks>
+    Public Overridable Property Stream() As Stream
+        Get
+            Return _stream
+        End Get
+        Set(ByVal value As Stream)
+            _stream = value
         End Set
     End Property
 

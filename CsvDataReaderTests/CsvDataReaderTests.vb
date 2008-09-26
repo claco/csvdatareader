@@ -33,10 +33,28 @@ Public Class CsvDataReaderTests
         End Using
     End Sub
 
+    <Test(Description:="Test Cav stream with header")> _
+    Public Sub CsvStreamWithHeader()
+        Using stream As New FileStream("data\header.csv", FileMode.Open)
+            Using reader As IDataReader = New CsvDataReader(stream)
+                ValidateHeaderedReader(reader)
+            End Using
+        End Using
+    End Sub
+
     <Test(Description:="Test Cav file with header and encoding")> _
     Public Sub CsvWithHeaderWithEncoding()
         Using reader As IDataReader = New CsvDataReader("data\header.csv", System.Text.Encoding.ASCII)
             ValidateHeaderedReader(reader)
+        End Using
+    End Sub
+
+    <Test(Description:="Test Cav stream with header and encoding")> _
+    Public Sub CsvStreamWithHeaderWithEncoding()
+        Using stream As New FileStream("data\header.csv", FileMode.Open)
+            Using reader As IDataReader = New CsvDataReader(stream, System.Text.Encoding.ASCII)
+                ValidateHeaderedReader(reader)
+            End Using
         End Using
     End Sub
 
@@ -142,6 +160,60 @@ Public Class CsvDataReaderTests
         End Using
     End Sub
 
+    <Test(Description:="Test Tsv stream with defined columns")> _
+    Public Sub TsvStreamWithColumns()
+        Dim columns As New Collection(Of CsvDataColumn)
+        columns.Add(New CsvDataColumn("STRING", GetType(String)))
+        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer)))
+        columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime)))
+        columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
+        columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
+        columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
+        columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
+        columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
+        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
+
+        Using stream As New FileStream("data\noheader.tsv", FileMode.Open)
+            Using reader As IDataReader = New CsvDataReader(stream, columns)
+                DirectCast(reader, CsvDataReader).FieldSeparator = vbTab
+
+                Dim schemaTable As DataTable = reader.GetSchemaTable
+                For c As Integer = 0 To schemaTable.Columns.Count - 1
+                    Me.AreEqual(columns.Item(c), schemaTable.Columns.Item(c))
+                Next
+
+                ValidateColumnedReader(reader)
+            End Using
+        End Using
+    End Sub
+
+    <Test(Description:="Test Tsv stream with defined columns and encoding")> _
+    Public Sub TsvStreamWithColumnsAndEncoding()
+        Dim columns As New Collection(Of CsvDataColumn)
+        columns.Add(New CsvDataColumn("STRING", GetType(String)))
+        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer)))
+        columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime)))
+        columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
+        columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
+        columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
+        columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
+        columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
+        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
+
+        Using stream As New FileStream("data\noheader.tsv", FileMode.Open)
+            Using reader As IDataReader = New CsvDataReader(stream, columns, System.Text.Encoding.ASCII)
+                DirectCast(reader, CsvDataReader).FieldSeparator = vbTab
+
+                Dim schemaTable As DataTable = reader.GetSchemaTable
+                For c As Integer = 0 To schemaTable.Columns.Count - 1
+                    Me.AreEqual(columns.Item(c), schemaTable.Columns.Item(c))
+                Next
+
+                ValidateColumnedReader(reader)
+            End Using
+        End Using
+    End Sub
+
     <Test(Description:="Test tab delimited file with defined columns in schema")> _
     Public Sub TsvWithSchema()
         Using reader As IDataReader = New CsvDataReader("data\noheader.tsv")
@@ -186,6 +258,23 @@ Public Class CsvDataReaderTests
             DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
 
             ValidateColumnedReader(reader)
+        End Using
+    End Sub
+
+    <Test(Description:="Test pipe separated file with defined columns in schema using stream")> _
+    Public Sub PsvWithSchemaAndStream()
+        Dim data As String = String.Concat( _
+            """Chris,topher""|35|""1/2/2003 2:34:56""|1.23|11111111-2222-3333-4444-555555555555|True|4|23.45|1.23", vbCrLf, _
+            " |23|2/3/2004|1.342||False|5|34.56|2.35" _
+        )
+
+        Using stream As New MemoryStream(System.Text.Encoding.UTF8.GetBytes(data))
+            Using reader As IDataReader = New CsvDataReader(stream)
+                DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
+                DirectCast(reader, CsvDataReader).SchemaSection = "noheader.psv"
+
+                ValidateColumnedReader(reader)
+            End Using
         End Using
     End Sub
 
