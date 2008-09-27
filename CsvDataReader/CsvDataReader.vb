@@ -20,6 +20,9 @@ Public Class CsvDataReader
     Private Const DEFAULT_FIELD_TYPE As FieldType = FieldType.Delimited
     Private Const DEFAULT_SCHEMA_FILE As String = "scheme.ini"
 
+    Private Const SCHEMA_CHARACTER_SET_OEM As String = "OEM"
+    Private Const SCHEMA_CHARACTER_SET_ANSI As String = "ANSI"
+
     REM Standard schema.ini formats
     Private Const SCHEMA_FORMAT_TAB_DELIMITED As String = "TabDelimited"
     Private Const SCHEMA_FORMAT_CSV_DELIMITED As String = "CsvDelimited"
@@ -349,8 +352,8 @@ Public Class CsvDataReader
             section = file.Name
         End If
 
-        Dim buffer(1024) As Char
-        Dim count As Integer = GetPrivateProfileSection(section, buffer, 1024, Me.SchemaFile)
+        Dim buffer(10240) As Char
+        Dim count As Integer = GetPrivateProfileSection(section, buffer, buffer.Length, Me.SchemaFile)
 
         If count > 0 Then
             Dim result As New String(buffer)
@@ -383,6 +386,17 @@ Public Class CsvDataReader
             ElseIf Regex.IsMatch(format, SCHEMA_FORMAT_DELIMITED, RegexOptions.IgnoreCase) Then
                 Me.FieldType = FileIO.FieldType.Delimited
                 Me.FieldSeparator = Regex.Match(format, SCHEMA_FORMAT_DELIMITED, RegexOptions.IgnoreCase).Groups(1).Value
+            End If
+
+            Dim charset As String = settings("characterset").Trim
+            If Regex.IsMatch(charset, SCHEMA_CHARACTER_SET_ANSI, RegexOptions.IgnoreCase) Then
+                Me.Encoding = Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.ANSICodePage)
+            ElseIf Regex.IsMatch(charset, SCHEMA_CHARACTER_SET_OEM, RegexOptions.IgnoreCase) Then
+                Me.Encoding = Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage)
+            ElseIf IsNumeric(charset) Then
+                Me.Encoding = Encoding.GetEncoding(Convert.ToInt32(charset))
+            Else
+                Me.Encoding = Encoding.GetEncoding(charset)
             End If
 
             Dim split As New Regex("\s+", RegexOptions.Compiled)

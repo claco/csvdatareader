@@ -1,5 +1,7 @@
 ﻿Imports System.IO
 Imports System.Collections.ObjectModel
+Imports System.Text
+Imports System.Globalization
 Imports Microsoft.VisualBasic.FileIO
 Imports NUnit.Framework
 Imports ChrisLaco.Data
@@ -30,6 +32,8 @@ Public Class CsvDataReaderTests
     Public Sub CsvWithHeader()
         Using reader As IDataReader = New CsvDataReader("data\header.csv")
             ValidateHeaderedReader(reader)
+
+            Assert.AreEqual(Encoding.UTF8, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -38,6 +42,8 @@ Public Class CsvDataReaderTests
         Using stream As New FileStream("data\header.csv", FileMode.Open)
             Using reader As IDataReader = New CsvDataReader(stream)
                 ValidateHeaderedReader(reader)
+
+                Assert.AreEqual(Encoding.UTF8, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
             End Using
         End Using
     End Sub
@@ -46,6 +52,8 @@ Public Class CsvDataReaderTests
     Public Sub CsvWithHeaderWithEncoding()
         Using reader As IDataReader = New CsvDataReader("data\header.csv", System.Text.Encoding.ASCII)
             ValidateHeaderedReader(reader)
+
+            Assert.AreEqual(Encoding.ASCII, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -54,6 +62,8 @@ Public Class CsvDataReaderTests
         Using stream As New FileStream("data\header.csv", FileMode.Open)
             Using reader As IDataReader = New CsvDataReader(stream, System.Text.Encoding.ASCII)
                 ValidateHeaderedReader(reader)
+
+                Assert.AreEqual(Encoding.ASCII, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
             End Using
         End Using
     End Sub
@@ -78,6 +88,8 @@ Public Class CsvDataReaderTests
             Next
 
             ValidateColumnedReader(reader)
+
+            Assert.AreEqual(Encoding.UTF8, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -101,6 +113,8 @@ Public Class CsvDataReaderTests
             Next
 
             ValidateColumnedReader(reader)
+
+            Assert.AreEqual(Encoding.ASCII, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -110,6 +124,8 @@ Public Class CsvDataReaderTests
             DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
 
             ValidateColumnedReader(reader)
+
+            Assert.AreEqual(Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage), DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -120,6 +136,8 @@ Public Class CsvDataReaderTests
             DirectCast(reader, CsvDataReader).SchemaSection = "testnoheader"
 
             ValidateHeaderedReader(reader)
+
+            Assert.AreEqual(Encoding.Unicode, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -132,6 +150,8 @@ Public Class CsvDataReaderTests
         Using reader As IDataReader = New CsvDataReader("data\header.tsv")
             DirectCast(reader, CsvDataReader).FieldSeparator = vbTab
             ValidateHeaderedReader(reader)
+
+            Assert.AreEqual(Encoding.UTF8, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -157,6 +177,8 @@ Public Class CsvDataReaderTests
             Next
 
             ValidateColumnedReader(reader)
+
+            Assert.AreEqual(Encoding.UTF8, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -183,6 +205,8 @@ Public Class CsvDataReaderTests
                 Next
 
                 ValidateColumnedReader(reader)
+
+                Assert.AreEqual(Encoding.UTF8, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
             End Using
         End Using
     End Sub
@@ -210,6 +234,8 @@ Public Class CsvDataReaderTests
                 Next
 
                 ValidateColumnedReader(reader)
+
+                Assert.AreEqual(Encoding.ASCII, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
             End Using
         End Using
     End Sub
@@ -220,6 +246,8 @@ Public Class CsvDataReaderTests
             DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
 
             ValidateColumnedReader(reader)
+
+            Assert.AreEqual(Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage), DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -249,6 +277,8 @@ Public Class CsvDataReaderTests
             Next
 
             ValidateColumnedReader(reader)
+
+            Assert.AreEqual(Encoding.UTF8, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -258,6 +288,8 @@ Public Class CsvDataReaderTests
             DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
 
             ValidateColumnedReader(reader)
+
+            Assert.AreEqual(Encoding.ASCII, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -274,6 +306,8 @@ Public Class CsvDataReaderTests
                 DirectCast(reader, CsvDataReader).SchemaSection = "noheader.psv"
 
                 ValidateColumnedReader(reader)
+
+                Assert.AreEqual(Encoding.ASCII, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
             End Using
         End Using
     End Sub
@@ -316,6 +350,8 @@ Public Class CsvDataReaderTests
             Next
 
             ValidateColumnedReader(reader)
+
+            Assert.AreEqual(Encoding.UTF8, DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
@@ -325,6 +361,8 @@ Public Class CsvDataReaderTests
             DirectCast(reader, CsvDataReader).SchemaFile = "data\test.ini"
 
             ValidateColumnedReader(reader)
+
+            Assert.AreEqual(Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage), DirectCast(reader, CsvDataReader).Encoding, "Encoding is set")
         End Using
     End Sub
 
