@@ -23,31 +23,23 @@ Public Class CsvDataReader
     Private Const SCHEMA_CHARACTER_SET_OEM As String = "OEM"
     Private Const SCHEMA_CHARACTER_SET_ANSI As String = "ANSI"
 
-    REM Standard schema.ini formats
     Private Const SCHEMA_FORMAT_TAB_DELIMITED As String = "TabDelimited"
     Private Const SCHEMA_FORMAT_CSV_DELIMITED As String = "CsvDelimited"
     Private Const SCHEMA_FORMAT_FIXED_LENGTH As String = "FixedLength"
     Private Const SCHEMA_FORMAT_DELIMITED As String = "Delimited\((.*)\)"
 
-    REM Standard schema.ini types
-    Private Const SCHEMA_COLUMN_TYPE_CHAR As String = "CHAR"
-    Private Const SCHEMA_COLUMN_TYPE_TEXT As String = "TEXT"
-    Private Const SCHEMA_COLUMN_TYPE_FLOAT As String = "FLOAT"
-    Private Const SCHEMA_COLUMN_TYPE_DOUBLE As String = "DOUBLE"
-    Private Const SCHEMA_COLUMN_TYPE_INTEGER As String = "INTEGER"
-    Private Const SCHEMA_COLUMN_TYPE_SHORT As String = "SHORT"
-    Private Const SCHEMA_COLUMN_TYPE_LONGCHAR As String = "LONGCHAR"
-    Private Const SCHEMA_COLUMN_TYPE_MEMO As String = "MEMO"
-    Private Const SCHEMA_COLUMN_TYPE_DATE As String = "DATE"
-
-    REM Non-standard schema.ini types
-    Private Const SCHEMA_COLUMN_TYPE_STRING As String = "STRING"
-    Private Const SCHEMA_COLUMN_TYPE_DATETIME As String = "DATETIME"
-    Private Const SCHEMA_COLUMN_TYPE_DECIMAL As String = "DECIMAL"
-    Private Const SCHEMA_COLUMN_TYPE_GUID As String = "GUID"
-    Private Const SCHEMA_COLUMN_TYPE_BOOLEAN As String = "BOOLEAN"
-    Private Const SCHEMA_COLUMN_TYPE_BIT As String = "BIT"
-
+    REM .NET Type => schema.ini type
+    Private Const SCHEMA_COLUMN_TYPE_STRING As String = "(Char|Text|LongChar|Memo|String)"
+    Private Const SCHEMA_COLUMN_TYPE_DATETIME As String = "(Date|DateTime)"
+    Private Const SCHEMA_COLUMN_TYPE_BOOLEAN As String = "(Bit|Boolean)"
+    Private Const SCHEMA_COLUMN_TYPE_GUID As String = "(Guid|Uuid)"
+    Private Const SCHEMA_COLUMN_TYPE_DOUBLE As String = "(Double|Float)"
+    Private Const SCHEMA_COLUMN_TYPE_SINGLE As String = "Single"
+    Private Const SCHEMA_COLUMN_TYPE_LONG As String = "Int64"
+    Private Const SCHEMA_COLUMN_TYPE_INTEGER As String = "(Long|Int32)"
+    Private Const SCHEMA_COLUMN_TYPE_SHORT As String = "(Short|Integer|Int16)"
+    Private Const SCHEMA_COLUMN_TYPE_DECIMAL As String = "(Decimal|Currency)"
+    Private Const SCHEMA_COLUMN_TYPE_BYTE As String = "Byte"
 
     Private Shared ReadOnly Log As ILog = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod.DeclaringType)
 
@@ -408,26 +400,30 @@ Public Class CsvDataReader
                 Next
 
                 Dim column As New CsvDataColumn(parts(0).Trim)
-                Select Case parts(1).Trim.ToUpper
-                    Case SCHEMA_COLUMN_TYPE_DATE, SCHEMA_COLUMN_TYPE_DATETIME
-                        column.DataType = GetType(DateTime)
-                    Case SCHEMA_COLUMN_TYPE_DOUBLE
-                        column.DataType = GetType(Double)
-                    Case SCHEMA_COLUMN_TYPE_FLOAT
-                        column.DataType = GetType(Single)
-                    Case SCHEMA_COLUMN_TYPE_INTEGER
-                        column.DataType = GetType(Integer)
-                    Case SCHEMA_COLUMN_TYPE_SHORT
-                        column.DataType = GetType(Short)
-                    Case SCHEMA_COLUMN_TYPE_TEXT, SCHEMA_COLUMN_TYPE_CHAR, SCHEMA_COLUMN_TYPE_LONGCHAR, SCHEMA_COLUMN_TYPE_MEMO, SCHEMA_COLUMN_TYPE_STRING
-                        column.DataType = GetType(String)
-                    Case SCHEMA_COLUMN_TYPE_DECIMAL
-                        column.DataType = GetType(Decimal)
-                    Case SCHEMA_COLUMN_TYPE_GUID
-                        column.DataType = GetType(Guid)
-                    Case SCHEMA_COLUMN_TYPE_BOOLEAN, SCHEMA_COLUMN_TYPE_BIT
-                        column.DataType = GetType(Boolean)
-                End Select
+                Dim type As String = parts(1)
+                If Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_STRING, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(String)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_DATETIME, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(DateTime)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_DOUBLE, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(Double)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_SINGLE, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(Single)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_BOOLEAN, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(Boolean)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_GUID, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(Guid)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_LONG, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(Long)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_INTEGER, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(Integer)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_SHORT, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(Short)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_DECIMAL, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(Decimal)
+                ElseIf Regex.IsMatch(type, SCHEMA_COLUMN_TYPE_BYTE, RegexOptions.IgnoreCase) Then
+                    column.DataType = GetType(Byte)
+                End If
 
                 If parts.Length = 4 Then
                     column.FieldWidth = parts(3)

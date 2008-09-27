@@ -72,14 +72,14 @@ Public Class CsvDataReaderTests
     Public Sub CsvWithColumns()
         Dim columns As New Collection(Of CsvDataColumn)
         columns.Add(New CsvDataColumn("STRING", GetType(String)))
-        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer)))
+        columns.Add(New CsvDataColumn("LONG", GetType(Integer)))
         columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime)))
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
         columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
         columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
-        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
+        columns.Add(New CsvDataColumn("SINGLE", GetType(Single)))
 
         Using reader As IDataReader = New CsvDataReader("data\noheader.csv", columns)
             Dim schemaTable As DataTable = reader.GetSchemaTable
@@ -97,14 +97,14 @@ Public Class CsvDataReaderTests
     Public Sub CsvWithColumnsAndEncoding()
         Dim columns As New Collection(Of CsvDataColumn)
         columns.Add(New CsvDataColumn("STRING", GetType(String)))
-        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer)))
+        columns.Add(New CsvDataColumn("LONG", GetType(Integer)))
         columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime)))
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
         columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
         columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
-        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
+        columns.Add(New CsvDataColumn("SINGLE", GetType(Single)))
 
         Using reader As IDataReader = New CsvDataReader("data\noheader.csv", columns, System.Text.Encoding.ASCII)
             Dim schemaTable As DataTable = reader.GetSchemaTable
@@ -159,14 +159,14 @@ Public Class CsvDataReaderTests
     Public Sub TsvWithColumns()
         Dim columns As New Collection(Of CsvDataColumn)
         columns.Add(New CsvDataColumn("STRING", GetType(String)))
-        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer)))
+        columns.Add(New CsvDataColumn("LONG", GetType(Integer)))
         columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime)))
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
         columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
         columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
-        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
+        columns.Add(New CsvDataColumn("SINGLE", GetType(Single)))
 
         Using reader As IDataReader = New CsvDataReader("data\noheader.tsv", columns)
             DirectCast(reader, CsvDataReader).FieldSeparator = vbTab
@@ -186,14 +186,14 @@ Public Class CsvDataReaderTests
     Public Sub TsvStreamWithColumns()
         Dim columns As New Collection(Of CsvDataColumn)
         columns.Add(New CsvDataColumn("STRING", GetType(String)))
-        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer)))
+        columns.Add(New CsvDataColumn("LONG", GetType(Integer)))
         columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime)))
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
         columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
         columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
-        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
+        columns.Add(New CsvDataColumn("SINGLE", GetType(Single)))
 
         Using stream As New FileStream("data\noheader.tsv", FileMode.Open)
             Using reader As IDataReader = New CsvDataReader(stream, columns)
@@ -215,14 +215,14 @@ Public Class CsvDataReaderTests
     Public Sub TsvStreamWithColumnsAndEncoding()
         Dim columns As New Collection(Of CsvDataColumn)
         columns.Add(New CsvDataColumn("STRING", GetType(String)))
-        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer)))
+        columns.Add(New CsvDataColumn("LONG", GetType(Integer)))
         columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime)))
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
         columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
         columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
-        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
+        columns.Add(New CsvDataColumn("SINGLE", GetType(Single)))
 
         Using stream As New FileStream("data\noheader.tsv", FileMode.Open)
             Using reader As IDataReader = New CsvDataReader(stream, columns, System.Text.Encoding.ASCII)
@@ -259,14 +259,14 @@ Public Class CsvDataReaderTests
     Public Sub PsvWithColumns()
         Dim columns As New Collection(Of CsvDataColumn)
         columns.Add(New CsvDataColumn("STRING", GetType(String)))
-        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer)))
+        columns.Add(New CsvDataColumn("LONG", GetType(Integer)))
         columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime)))
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal)))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid)))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean)))
         columns.Add(New CsvDataColumn("SHORT", GetType(Short)))
         columns.Add(New CsvDataColumn("DOUBLE", GetType(Double)))
-        columns.Add(New CsvDataColumn("FLOAT", GetType(Single)))
+        columns.Add(New CsvDataColumn("SINGLE", GetType(Single)))
 
         Using reader As IDataReader = New CsvDataReader("data\noheader.psv", columns)
             DirectCast(reader, CsvDataReader).FieldSeparator = "|"
@@ -330,14 +330,14 @@ Public Class CsvDataReaderTests
     Public Sub FixedWidthWithColumns()
         Dim columns As New Collection(Of CsvDataColumn)
         columns.Add(New CsvDataColumn("STRING", GetType(String), 15))
-        columns.Add(New CsvDataColumn("INTEGER", GetType(Integer), 4))
+        columns.Add(New CsvDataColumn("LONG", GetType(Integer), 4))
         columns.Add(New CsvDataColumn("DATETIME", GetType(DateTime), 20))
         columns.Add(New CsvDataColumn("DECIMAL", GetType(Decimal), 8))
         columns.Add(New CsvDataColumn("GUID", GetType(Guid), 38))
         columns.Add(New CsvDataColumn("BOOLEAN", GetType(Boolean), 5))
         columns.Add(New CsvDataColumn("SHORT", GetType(Short), 1))
         columns.Add(New CsvDataColumn("DOUBLE", GetType(Double), 5))
-        columns.Add(New CsvDataColumn("FLOAT", GetType(Single), 4))
+        columns.Add(New CsvDataColumn("SINGLE", GetType(Single), 4))
 
         Using reader As IDataReader = New CsvDataReader("data\fixed.txt", columns)
             DirectCast(reader, CsvDataReader).FieldSeparator = ","
@@ -384,20 +384,20 @@ Public Class CsvDataReaderTests
         Assert.AreEqual("String", reader.GetDataTypeName(0), "First column type name is String")
         Assert.AreEqual(0, reader.GetOrdinal("String"), "First column ordinal is correct")
 
-        Assert.AreEqual("INTEGER", reader.GetName(1), "Has second column name")
-        Assert.AreEqual("Int32", reader.GetDataTypeName(1), "Second column type name is String")
-        Assert.AreEqual(1, reader.GetOrdinal("INTEGER"), "Second column ordinal is correct")
+        Assert.AreEqual("LONG", reader.GetName(1), "Has second column name")
+        Assert.AreEqual("Int32", reader.GetDataTypeName(1), "Second column type name is Long")
+        Assert.AreEqual(1, reader.GetOrdinal("LONG"), "Second column ordinal is correct")
 
         Assert.AreEqual("DATETIME", reader.GetName(2), "Has third column name")
-        Assert.AreEqual("DateTime", reader.GetDataTypeName(2), "Third column type name is String")
+        Assert.AreEqual("DateTime", reader.GetDataTypeName(2), "Third column type name is DateTime")
         Assert.AreEqual(2, reader.GetOrdinal("DATETIME"), "Third column ordinal is correct")
 
         Assert.AreEqual("DECIMAL", reader.GetName(3), "Has fourth column name")
-        Assert.AreEqual("Decimal", reader.GetDataTypeName(3), "Fourth column type name is String")
+        Assert.AreEqual("Decimal", reader.GetDataTypeName(3), "Fourth column type name is Decimal")
         Assert.AreEqual(3, reader.GetOrdinal("DECIMAL"), "Fourth column ordinal is correct")
 
         Assert.AreEqual("GUID", reader.GetName(4), "Has fifth column name")
-        Assert.AreEqual("Guid", reader.GetDataTypeName(4), "Fifth column type name is String")
+        Assert.AreEqual("Guid", reader.GetDataTypeName(4), "Fifth column type name is Guid")
         Assert.AreEqual(4, reader.GetOrdinal("GUID"), "Fifth column ordinal is correct")
 
         Assert.AreEqual("BOOLEAN", reader.GetName(5), "Has sixth column name")
@@ -412,9 +412,9 @@ Public Class CsvDataReaderTests
         Assert.AreEqual("Double", reader.GetDataTypeName(7), "Eighth column type name is Double")
         Assert.AreEqual(7, reader.GetOrdinal("DOUBLE"), "Eighth column ordinal is correct")
 
-        Assert.AreEqual("FLOAT", reader.GetName(8), "Has nineth column name")
+        Assert.AreEqual("SINGLE", reader.GetName(8), "Has nineth column name")
         Assert.AreEqual("Single", reader.GetDataTypeName(8), "Nineth column type name is Single")
-        Assert.AreEqual(8, reader.GetOrdinal("FLOAT"), "Nineth column ordinal is correct")
+        Assert.AreEqual(8, reader.GetOrdinal("SINGLE"), "Nineth column ordinal is correct")
 
 
 
@@ -630,9 +630,9 @@ Public Class CsvDataReaderTests
         Assert.AreEqual("String", reader.GetDataTypeName(0), "First column type name is String")
         Assert.AreEqual(0, reader.GetOrdinal("String"), "First column ordinal is correct")
 
-        Assert.AreEqual("INTEGER", reader.GetName(1), "Has second column name")
+        Assert.AreEqual("LONG", reader.GetName(1), "Has second column name")
         Assert.AreEqual("String", reader.GetDataTypeName(1), "Second column type name is String")
-        Assert.AreEqual(1, reader.GetOrdinal("INTEGER"), "Second column ordinal is correct")
+        Assert.AreEqual(1, reader.GetOrdinal("LONG"), "Second column ordinal is correct")
 
         Assert.AreEqual("DATETIME", reader.GetName(2), "Has third column name")
         Assert.AreEqual("String", reader.GetDataTypeName(2), "Third column type name is String")
@@ -658,9 +658,9 @@ Public Class CsvDataReaderTests
         Assert.AreEqual("String", reader.GetDataTypeName(7), "Eighth column type name is String")
         Assert.AreEqual(7, reader.GetOrdinal("DOUBLE"), "Eighth column ordinal is correct")
 
-        Assert.AreEqual("FLOAT", reader.GetName(8), "Has nineth column name")
+        Assert.AreEqual("SINGLE", reader.GetName(8), "Has nineth column name")
         Assert.AreEqual("String", reader.GetDataTypeName(8), "Nineth column type name is String")
-        Assert.AreEqual(8, reader.GetOrdinal("FLOAT"), "Nineth column ordinal is correct")
+        Assert.AreEqual(8, reader.GetOrdinal("SINGLE"), "Nineth column ordinal is correct")
 
 
 
