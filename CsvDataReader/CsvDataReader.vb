@@ -29,17 +29,17 @@ Public Class CsvDataReader
     Private Const SCHEMA_FORMAT_DELIMITED As String = "Delimited\((.*)\)"
 
     REM .NET Type => schema.ini type
-    Private Const SCHEMA_COLUMN_TYPE_STRING As String = "(Char|Text|LongChar|Memo|String)"
-    Private Const SCHEMA_COLUMN_TYPE_DATETIME As String = "(Date|DateTime)"
     Private Const SCHEMA_COLUMN_TYPE_BOOLEAN As String = "(Bit|Boolean)"
-    Private Const SCHEMA_COLUMN_TYPE_GUID As String = "(Guid|Uuid)"
-    Private Const SCHEMA_COLUMN_TYPE_DOUBLE As String = "(Double|Float)"
-    Private Const SCHEMA_COLUMN_TYPE_SINGLE As String = "Single"
-    Private Const SCHEMA_COLUMN_TYPE_LONG As String = "Int64"
-    Private Const SCHEMA_COLUMN_TYPE_INTEGER As String = "(Long|Int32)"
-    Private Const SCHEMA_COLUMN_TYPE_SHORT As String = "(Short|Integer|Int16)"
-    Private Const SCHEMA_COLUMN_TYPE_DECIMAL As String = "(Decimal|Currency)"
     Private Const SCHEMA_COLUMN_TYPE_BYTE As String = "Byte"
+    Private Const SCHEMA_COLUMN_TYPE_DATETIME As String = "(Date|DateTime)"
+    Private Const SCHEMA_COLUMN_TYPE_DECIMAL As String = "(Decimal|Currency)"
+    Private Const SCHEMA_COLUMN_TYPE_DOUBLE As String = "(Double|Float)"
+    Private Const SCHEMA_COLUMN_TYPE_INTEGER As String = "(Integer|Int32)"
+    Private Const SCHEMA_COLUMN_TYPE_LONG As String = "(Long|Int64)"
+    Private Const SCHEMA_COLUMN_TYPE_SINGLE As String = "Single"
+    Private Const SCHEMA_COLUMN_TYPE_SHORT As String = "(Short|Int16)"
+    Private Const SCHEMA_COLUMN_TYPE_STRING As String = "(Char|VarChar|Text|LongChar|Memo|String)"
+    Private Const SCHEMA_COLUMN_TYPE_GUID As String = "(Guid|Uuid)"
 
     Private Shared ReadOnly Log As ILog = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod.DeclaringType)
 
@@ -621,7 +621,7 @@ Public Class CsvDataReader
     ''' <returns>Byte</returns>
     ''' <remarks></remarks>
     Public Function GetByte(ByVal i As Integer) As Byte Implements System.Data.IDataRecord.GetByte
-        Return Convert.ToByte(Me.GetChar(i))
+        Return Convert.ToByte(Me.GetValue(i))
     End Function
 
     ''' <summary>
